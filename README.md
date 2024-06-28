@@ -12,7 +12,7 @@ mkdir -p ~/ros2_ws/src
 **Download AuRadar4D ROS2 Source code**:
 ```
 cd ~/ros2_ws/src
-$ https://github.com/auradar/au_4d_radar.git
+$ git clone https://github.com/auradar/au_4d_radar.git
 ```
 
 **Download radar messages**:
@@ -24,7 +24,7 @@ $ git clone https://github.com/ros-perception/radar_msgs.git
 **Download monitor messages**:
 ```
 $ cd ~/ros2_ws/src
-$ https://github.com/auradar/mon_msgs.git
+$ git clone https://github.com/auradar/mon_msgs.git
 ```
 
 **Change Target IP**:
