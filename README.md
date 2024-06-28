@@ -1,7 +1,7 @@
 Overview
 ========
 
-AuRadar4D_ROS2 is a collection of ROS2 packages supporting AU 4D Radar.
+au_4d_radar is a collection of ROS2 packages supporting AU 4D Radar.
 This program has been tested on ubuntu 22.04 ROS2 humble.
 
 **Create a new work directory of ROS2**:
