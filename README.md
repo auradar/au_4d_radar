@@ -42,6 +42,7 @@ $ colcon build --cmake-args -DCMAKE_BUILD_TYPE=Relaese --packages-up-to au_4d_ra
 **Run in Terminal 1**:
 ```
 $ cd ~/share/ros2_ws
+source install/local_setup.bash
 ros2 run rclcpp_components component_container
 ```
 **Run in Terminal 2**:
