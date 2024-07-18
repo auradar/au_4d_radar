@@ -15,8 +15,8 @@ def generate_launch_description():
             executable='component_container',
             composable_node_descriptions=[
                 ComposableNode(
-                    package='composition',
-                    plugin='composition::device_au_radar_node',
+                    package='au_4d_radar',
+                    plugin='au_4d_radar::device_au_radar_node',
                     name='device_au_radar_node'),
                 ComposableNode(
                     package='composition',
