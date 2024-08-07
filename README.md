@@ -33,7 +33,7 @@ src/socket.cpp
 #define TARGET_IP	"xxx.xxx.xxx.xxx"
 ```
 
-**Compile & Run**:
+**Compile**:
 ```
 $ cd ~/share/ros2_ws
 $ colcon build --cmake-args -DCMAKE_BUILD_TYPE=Relaese --packages-up-to au_4d_radar
