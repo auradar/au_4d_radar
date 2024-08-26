@@ -36,11 +36,9 @@ public:
 
     void start() {
         thread_radar = std::thread(&CommThread::rxRadar, this);
-
-       	join();
     }
 
-    void join() {
+    void stop() {
         if (thread_radar.joinable()) {
             thread_radar.join();
         }
@@ -59,4 +57,3 @@ private:
 };
 
 #endif
-
