@@ -17,11 +17,11 @@ def generate_launch_description():
                 ComposableNode(
                     package='au_4d_radar',
                     plugin='au_4d_radar::device_au_radar_node',
-                    name='device_au_radar_node'),
-                ComposableNode(
-                    package='composition',
-                    plugin='composition::Listener',
-                    name='listener')
+                    name='device_au_radar_node')#,
+                # ComposableNode(
+                #     package='composition',
+                #     plugin='composition::Listener',
+                #     name='listener')
             ],
             output='screen',
     )
