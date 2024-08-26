@@ -1,5 +1,5 @@
 /**
- * @file cm.cpp
+ * @file cm.hpp
  * @author Kisoo Kim (kisoo.kim@au-sensor.com)
  * @brief 
  * @version 0.1
@@ -9,38 +9,54 @@
  * 
  */
  
+#ifndef CM_H
+#define CM_H
 
-#include <iostream>
+
+#include <semaphore>
 #include <thread>
-#include <chrono>
 #include <condition_variable>
 
-
-#include "au_4d_radar/socket.hpp"
-#include "au_4d_radar/cm.hpp"
-#include "au_4d_radar/au_4d_radar.hpp"
+#include <rclcpp/rclcpp.hpp>
 
 
-void CommThread::init()
+class CommThread 
 {
-	soc_client();
-}
+public:
+    CommThread() {
+        std::cout << "CommThread object created" << std::endl;
+    }
 
-void CommThread::sendCmdtoRadar(const char * msg)
-{
-	soc_send(msg);
-}
+    ~CommThread() {
+        std::cout << "CommThread object destroyed" << std::endl;
+    }
 
-
-void CommThread::rxRadar(void)
-{
-	
-
-	while(1)
-	{
+    void rxRadar();
 
 
-	}
+    void start() {
+        thread_radar = std::thread(&CommThread::rxRadar, this);
 
-}
+       	join();
+    }
+
+    void join() {
+        if (thread_radar.joinable()) {
+            thread_radar.join();
+        }
+
+    }
+
+    void init();
+
+    static void sendCmdtoRadar(const char * msg);
+    
+
+private:
+    std::thread thread_radar;
+    std::thread thread_pub;
+
+};
+
+#endif
 
