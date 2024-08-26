@@ -46,13 +46,16 @@ source install/local_setup.bash
 ros2 launch au_4d_radar run_radar.launch.py
 ```
 
-**Run in Terminal 1**:
+Run-time composition using ROS services
+=============
+
+**Run in shell 1**:
 ```
 $ cd ~/share/ros2_ws
 source install/local_setup.bash
 ros2 run rclcpp_components component_container
 ```
-**Run in Terminal 2**:
+**Run in shell 2**:
 ```
 $ cd ~/share/ros2_ws
 source install/local_setup.bash
