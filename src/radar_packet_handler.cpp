@@ -121,7 +121,7 @@ int RadarPacketHandler::send_messages(const char* msg, const char* addr) {
         std::cerr << "Error: Failed to send message\n";
         return -1;
     }
-    std::cout << "Message sent: " << addr << " msg: " << msg << std::endl;
+    // std::cout << "Message sent: " << addr << " msg: " << msg << std::endl;
 
     return 0;
 }
