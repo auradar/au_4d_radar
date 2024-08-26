@@ -49,7 +49,7 @@ public:
 
     void init();
 
-    void sendCmdtoRadar(const char * msg);
+    static void sendCmdtoRadar(const char * msg);
     
 
 private:
