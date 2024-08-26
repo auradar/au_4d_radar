@@ -1,0 +1,9 @@
+// ResponseConnection.pbs
+namespace AU;
+
+table ResponseConnection {
+  mssg_type: string;
+  client_hostname: string;
+}
+
+root_type ResponseConnection;

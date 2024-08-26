@@ -1,0 +1,9 @@
+// RequestConnection.pbs
+namespace AU;
+
+table RequestConnection {
+  mssg_type: string;
+  client_hostname: string;
+}
+
+root_type RequestConnection;

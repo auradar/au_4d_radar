@@ -1,0 +1,11 @@
+// heartbeat.fbs
+namespace AU;
+
+table Heartbeat {
+  mssg_type: string;
+  client_hostname: string;
+  status: uint32;
+  timestamp: uint64;
+}
+
+root_type Heartbeat;
