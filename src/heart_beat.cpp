@@ -121,9 +121,7 @@ void Heartbeat::stop() {
         receiverThread.join();
     }
 
-    if (receiverThread.joinable()) {
-        receiverThread.join();
-    }  
+    std::cerr << "Heartbeat::stop" << std::endl;        
 }  
 
 bool Heartbeat::connectionStatus(){

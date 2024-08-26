@@ -33,7 +33,6 @@ void RadarPacketHandler::start() {
 }
 
 void RadarPacketHandler::stop() {
-
     radar_running = false;
     
     if (rd_sockfd >= 0) {
@@ -44,6 +43,7 @@ void RadarPacketHandler::stop() {
     if (thread_.joinable()) {
         thread_.join();
     }
+    std::cerr << "RadarPacketHandler::stop" << std::endl;    
 }
 
 bool RadarPacketHandler::initialize() {
