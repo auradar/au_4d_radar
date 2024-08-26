@@ -1,11 +1,12 @@
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.22)
 
 project(au_4d_radar)
 
-# Default to C++17
+# Default to C++20
 if(NOT CMAKE_CXX_STANDARD)
-  set(CMAKE_CXX_STANDARD 17)
+  set(CMAKE_CXX_STANDARD 20)
   set(CMAKE_CXX_STANDARD_REQUIRED ON)
+  set(CMAKE_CXX_EXTENSIONS OFF)  
 endif()
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
@@ -21,6 +22,9 @@ find_package(sensor_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(radar_msgs REQUIRED)
 find_package(mon_msgs REQUIRED)
+find_package(yaml-cpp REQUIRED)
+find_package(flatbuffers REQUIRED)
+find_package(ament_index_cpp REQUIRED)
 
 include_directories(include)
 
@@ -29,11 +33,23 @@ set(node_plugins "")
 
 add_library(device_au_radar_node SHARED
   src/au_4d_radar.cpp
-  src/cm.cpp
-  src/socket.cpp)
+  src/conversion.cpp
+  src/message_parse.cpp
+  src/radar_packet_handler.cpp  
+  src/heart_beat.cpp)  
 
 target_compile_definitions(device_au_radar_node
   PRIVATE "COMPOSITION_BUILDING_DLL")
+
+target_include_directories(device_au_radar_node
+    PRIVATE
+    /usr/local/include
+)
+
+target_link_libraries(device_au_radar_node
+    yaml-cpp
+    pthread    
+)
 
 ament_target_dependencies(device_au_radar_node
   "rclcpp"
@@ -41,7 +57,9 @@ ament_target_dependencies(device_au_radar_node
   "sensor_msgs"  
   "nav_msgs"
   "radar_msgs"
-  "mon_msgs")
+  "mon_msgs"
+  "ament_index_cpp"
+  )
 
 rclcpp_components_register_nodes(device_au_radar_node "au_4d_radar::device_au_radar_node")
 set(node_plugins "${node_plugins}au_4d_radar::device_au_radar_node;$<TARGET_FILE:device_au_radar_node>\n")
@@ -57,12 +75,18 @@ install(TARGETS
   device_au_radar_node
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
-  RUNTIME DESTINATION bin)
+  RUNTIME DESTINATION bin
+  )
 
 # Install launch files.
 install(DIRECTORY
   launch
   DESTINATION share/${PROJECT_NAME}
+)
+
+install(FILES
+  config/system_info.yaml  
+  DESTINATION share/${PROJECT_NAME}/config  
 )
 
 ament_package()
