@@ -10,7 +10,6 @@
  */
 
 #include <iostream>
-#include "au_4d_radar/au_4d_radar.hpp"
 #include "au_4d_radar/uuid_helper.hpp"
 #include "au_4d_radar/cm.hpp"
 #include "au_4d_radar/socket.hpp"
