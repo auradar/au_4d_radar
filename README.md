@@ -39,6 +39,13 @@ $ cd ~/share/ros2_ws
 $ colcon build --cmake-args -DCMAKE_BUILD_TYPE=Relaese --packages-up-to au_4d_radar
 ```
 
+**Running Radar Node using launch actions**:
+```
+$ cd ~/share/ros2_ws
+source install/local_setup.bash
+ros2 launch au_4d_radar run_radar.launch.py
+```
+
 **Run in Terminal 1**:
 ```
 $ cd ~/share/ros2_ws
