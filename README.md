@@ -74,7 +74,7 @@ ros2 component load /ComponentManager au_4d_radar au_4d_radar::device_au_radar_n
 **FlatBuffers Install**:
 ```
 1. Download flatbuf
-export VERSION = v24.3.25
+export VERSION=v24.3.25
 git clone https: //github.com/google/flatbuffers.git flatbuffers_$VERSION
 cd flatbuffers_$VERSION
 git checkout $VERSION
