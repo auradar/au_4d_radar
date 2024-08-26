@@ -9,6 +9,7 @@
  * 
  */
 
+#include <iostream>
 #include "au_4d_radar/au_4d_radar.hpp"
 #include "au_4d_radar/uuid_helper.hpp"
 #include "au_4d_radar/cm.hpp"
@@ -20,9 +21,9 @@
 
 #define UDP_MTU		1500
 
-#define HEADER_SCAN 			0xFFFFFFFF
-#define HEADER_TRACK 			0x15151515
-#define HEADER_MON 				0xAAAAAAAA
+#define HEADER_SCAN 			0x5343414e 
+#define HEADER_TRACK 			0x54524143
+#define HEADER_MON 				0x4d4f4e49
 
 
 using namespace std::chrono_literals;
@@ -33,6 +34,7 @@ namespace au_4d_radar
 typedef struct
 {
     uint32_t ui32SB;		/* header */
+    uint32_t uniq_id;	
   	uint32_t tv_sec;
     uint32_t tv_nsec;
     uint32_t ui32FN;		/* frame number */
@@ -129,6 +131,7 @@ void device_au_radar_node::monitor()
 	std::cout << "publish radar health msgs:"<<radar_health_msg.status << std::endl;
 
 	pub_radar_mon->publish(radar_health_msg);  
+    CommThread::sendCmdtoRadar("SS");	
 }
 
 // int main(int argc, char ** argv)
@@ -169,14 +172,17 @@ void device_au_radar_node::parse_radar_data(uint8_t * p_buff)
 	
 	tsPacketHeader header;
 	header = {};
+    std::stringstream ss;
 
-
-	uint32_t id = p_buff[0]<<24|p_buff[1]<<16|p_buff[2]<<8|p_buff[3];
+	// uint32_t id = p_buff[0]<<24|p_buff[1]<<16|p_buff[2]<<8|p_buff[3];
+    uint32_t id = convert_to_uint32(&p_buff[0]);
 	
 	if(id  == HEADER_SCAN)
 	{
 		
 		idx += 4;
+        header.uniq_id = convert_to_uint32(&p_buff[idx]);
+        idx += 4;		
 		header.tv_sec = 	  convert_to_uint32(&p_buff[idx]);
 		idx += 4;
 		header.tv_nsec =  	convert_to_uint32(&p_buff[idx]);
@@ -188,26 +194,27 @@ void device_au_radar_node::parse_radar_data(uint8_t * p_buff)
 		header.ui32TPN = 	  convert_to_uint32(&p_buff[idx]);
 		idx += 4;
 		header.ui32PN = 	  convert_to_uint32(&p_buff[idx]);
-		idx += 2;
+		idx += 4;
 		header.ui16TPCKN = 	convetr_to_uint16(&p_buff[idx]);
 		idx += 2;
 		header.ui16PCKN = 	convetr_to_uint16(&p_buff[idx]);
+		idx += 2;
 
-		frame_id	= std::to_string(header.ui32FN); 
-		stamp_tv_sec = header.tv_sec;
-		stamp_tv_nsec = header.tv_nsec;
+        if(header.ui32PN > 60){ // 60
+            std::cerr << "Failed to decode parse_radar_data." << " header.ui32PN: " << header.ui32PN << std::endl;
+            return;
+        }
 
-		std::cout << " frame_id:" <<frame_id
-				  << " tv_sec:" <<header.tv_sec
-				  << " tv_nsec: " <<header.tv_nsec
-				  << " ui32FN: " <<header.ui32FN
-				  << " ui32TPN: " <<header.ui32TPN
-				  << " ui32PN: " <<header.ui32PN
-				  << std::endl;
+        // https://github.com/ros2/common_interfaces/blob/rolling/std_msgs/msg/Header.msg
+        //sequence_id_ = header.ui32FN; 
+        ss << std::hex << header.uniq_id;
+        frame_id_ = ss.str();
+        stamp_tv_sec_ = header.tv_sec;
+        stamp_tv_nsec_ = header.tv_nsec;
 
-		radar_scan_msg.header.frame_id = frame_id;		//radar coordinate 
-		radar_scan_msg.header.stamp.sec = stamp_tv_sec;
-		radar_scan_msg.header.stamp.nanosec = stamp_tv_nsec;
+		radar_scan_msg.header.frame_id = frame_id_;		//radar coordinate 
+		radar_scan_msg.header.stamp.sec = stamp_tv_sec_;
+		radar_scan_msg.header.stamp.nanosec = stamp_tv_nsec_;
 		
 		//Point cloud
 		for(uint32_t i = 0; i < header.ui32PN; i++)
@@ -221,10 +228,10 @@ void device_au_radar_node::parse_radar_data(uint8_t * p_buff)
 			idx += 4;		    
 			return_msg.azimuth = convert_to_float(&p_buff[idx]);
 			idx += 4;
-      return_msg.elevation = convert_to_float(&p_buff[idx]);
-      idx += 4;
-      return_msg.amplitude = convert_to_float(&p_buff[idx]);
-      idx += 4;
+			return_msg.elevation = convert_to_float(&p_buff[idx]);
+			idx += 4;
+			return_msg.amplitude = convert_to_float(&p_buff[idx]);
+			idx += 4;
 
 			radar_scan_msg.returns.push_back(return_msg);
 		}		
@@ -235,9 +242,9 @@ void device_au_radar_node::parse_radar_data(uint8_t * p_buff)
 	else if(id  == HEADER_TRACK)
 	{
 
-		radar_tracks_msg.header.frame_id = frame_id;	
-		radar_tracks_msg.header.stamp.sec = stamp_tv_sec;	
-		radar_tracks_msg.header.stamp.nanosec = stamp_tv_nsec;
+		radar_tracks_msg.header.frame_id = frame_id_;	
+		radar_tracks_msg.header.stamp.sec = stamp_tv_sec_;	
+		radar_tracks_msg.header.stamp.nanosec = stamp_tv_nsec_;
 
 		//Tracking
 		for(int i = 0; i < 3; i++)
@@ -277,9 +284,19 @@ void device_au_radar_node::parse_radar_data(uint8_t * p_buff)
 	}
 	else
 	{
-		std::cout << "recieved mon msgs " << std::endl;
+		std::cout << "recieved msgs id :  " << std::hex << id << std::endl;
 	}
 
+    if(id == HEADER_SCAN || id == HEADER_TRACK){
+        std::cout << "parse_radar_data::" 
+                << " id : " << std::hex << id
+                << " frame_id: " << frame_id_
+                << " ui32FN: " << header.ui32FN
+                << " ui32TPN: " << header.ui32TPN
+                << " ui32PN: " << header.ui32PN                
+                << " ui16TPCKN: " << header.ui16TPCKN
+                << std::endl;
+    }
 
 }
 
