@@ -65,9 +65,9 @@ private:
 	size_t count_;
 
   static uint32_t temp_cnt;
-  std::string frame_id;
-  uint32_t stamp_tv_sec;
-  uint32_t stamp_tv_nsec;
+  std::string frame_id_;
+  uint32_t stamp_tv_sec_;
+  uint32_t stamp_tv_nsec_;
 
   radar_msgs::msg::RadarTracks radar_tracks_msg;
   radar_msgs::msg::RadarScan radar_scan_msg;
