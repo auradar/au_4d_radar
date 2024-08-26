@@ -63,8 +63,7 @@ namespace au_4d_radar
         static uint32_t temp_cnt;
 
         MessageParser message_parser_; 
-        // RadarPacketHandler radar_handler_;        
-        // Heartbeat heart_beat_;  
+        
         static device_au_radar_node* instance_;
     };
 }
