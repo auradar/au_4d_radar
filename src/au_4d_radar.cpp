@@ -49,8 +49,6 @@ typedef struct
 device_au_radar_node::device_au_radar_node(const rclcpp::NodeOptions & options)
 : Node("device_au_radar_node", options), count_(0)
 {
-  // std::cout << "device_au_radar_node.." << std::endl;
-  
   timer_ = this->create_wall_timer(
       PUB_TIME, 
       std::bind(&device_au_radar_node::publish, this));
@@ -83,7 +81,6 @@ void device_au_radar_node::interruptHandler(int sig)
     RCLCPP_ERROR(rclcpp::get_logger("interruptHandler"), "signum=%d", sig);
 
     if(sig==SIGINT || sig==SIGHUP || sig==SIGKILL || sig==SIGSEGV || sig==SIGTERM) {
-        // exit
 
       CommThread comm;
 
@@ -99,9 +96,7 @@ void device_au_radar_node::get_param(rclcpp::Node::SharedPtr nh, const std::stri
 {
   using var_type = std::remove_reference_t<decltype(variable)>;
 
-  // check if param is declared earlier
   if (!nh->has_parameter(name))
-    // use default variable if user declared var is not avail
     variable = nh->declare_parameter<var_type>(name, variable);
   else
     nh->get_parameter(name, variable);
@@ -116,7 +111,6 @@ void device_au_radar_node::publish()
   if((len = soc_recv((char *)buffer, UDP_MTU)) > 0)
   {
     parse_radar_data(buffer);
-    // publish_radar_data();
   }
 }
 
@@ -127,14 +121,12 @@ void device_au_radar_node::monitor()
 	mon_msgs::msg::RadarHealth radar_health_msg;
 
 	radar_health_msg.status  = temp_cnt++;
-
-	std::cout << "publish radar health msgs:"<<radar_health_msg.status << std::endl;
+  RCLCPP_INFO(rclcpp::get_logger("monitor"), "publish radar health msgs:  %u", radar_health_msg.status); 
 
 	pub_radar_mon->publish(radar_health_msg);  
-    CommThread::sendCmdtoRadar("SS");	
+  CommThread::sendCmdtoRadar("SS");	
 }
 
-// int main(int argc, char ** argv)
 int device_au_radar_node::initRadar(void)
 {
   CommThread comm;
@@ -172,17 +164,14 @@ void device_au_radar_node::parse_radar_data(uint8_t * p_buff)
 	
 	tsPacketHeader header;
 	header = {};
-    std::stringstream ss;
+  std::stringstream ss;
 
-	// uint32_t id = p_buff[0]<<24|p_buff[1]<<16|p_buff[2]<<8|p_buff[3];
-    uint32_t id = convert_to_uint32(&p_buff[0]);
-	
+  uint32_t id = convert_to_uint32(&p_buff[0]);
 	if(id  == HEADER_SCAN)
-	{
-		
+	{		
 		idx += 4;
-        header.uniq_id = convert_to_uint32(&p_buff[idx]);
-        idx += 4;		
+    header.uniq_id = convert_to_uint32(&p_buff[idx]);
+    idx += 4;		
 		header.tv_sec = 	  convert_to_uint32(&p_buff[idx]);
 		idx += 4;
 		header.tv_nsec =  	convert_to_uint32(&p_buff[idx]);
@@ -200,17 +189,17 @@ void device_au_radar_node::parse_radar_data(uint8_t * p_buff)
 		header.ui16PCKN = 	convetr_to_uint16(&p_buff[idx]);
 		idx += 2;
 
-        if(header.ui32PN > 60){ // 60
-            std::cerr << "Failed to decode parse_radar_data." << " header.ui32PN: " << header.ui32PN << std::endl;
-            return;
-        }
+    if(header.ui32PN > 60){ // 60
+        RCLCPP_ERROR(rclcpp::get_logger("MessageParser"), "Failed to decode parse_radar_data ui32PN: %u", header.ui32PN);     
+        return;
+    }
 
-        // https://github.com/ros2/common_interfaces/blob/rolling/std_msgs/msg/Header.msg
-        //sequence_id_ = header.ui32FN; 
-        ss << std::hex << header.uniq_id;
-        frame_id_ = ss.str();
-        stamp_tv_sec_ = header.tv_sec;
-        stamp_tv_nsec_ = header.tv_nsec;
+    // https://github.com/ros2/common_interfaces/blob/rolling/std_msgs/msg/Header.msg
+    //sequence_id_ = header.ui32FN; 
+    ss << std::hex << header.uniq_id;
+    frame_id_ = ss.str();
+    stamp_tv_sec_ = header.tv_sec;
+    stamp_tv_nsec_ = header.tv_nsec;
 
 		radar_scan_msg.header.frame_id = frame_id_;		//radar coordinate 
 		radar_scan_msg.header.stamp.sec = stamp_tv_sec_;
@@ -277,26 +266,17 @@ void device_au_radar_node::parse_radar_data(uint8_t * p_buff)
 
     pub_radar_track->publish(radar_tracks_msg); 
 
-	}
-	else if(id  == HEADER_MON)
-	{
-
-	}
-	else
-	{
-		std::cout << "recieved msgs id :  " << std::hex << id << std::endl;
-	}
-
-    if(id == HEADER_SCAN || id == HEADER_TRACK){
-        std::cout << "parse_radar_data::" 
-                << " id : " << std::hex << id
-                << " frame_id: " << frame_id_
-                << " ui32FN: " << header.ui32FN
-                << " ui32TPN: " << header.ui32TPN
-                << " ui32PN: " << header.ui32PN                
-                << " ui16TPCKN: " << header.ui16TPCKN
-                << std::endl;
+    } else if(id == HEADER_MON) {
+        RCLCPP_INFO(rclcpp::get_logger("MessageParser"), "HEADER_MON message");         
+    }  else {
+        RCLCPP_INFO(rclcpp::get_logger("MessageParser"), "Failed to decode message id: %08x", id);           
     }
+
+  if(id == HEADER_SCAN || id == HEADER_TRACK){
+          RCLCPP_INFO(rclcpp::get_logger("MessageParser"), 
+          "id: %08x frame_id: %s ui32FN: %u ui32TPN: %u ui32PN: %u", 
+            id, frame_id_.c_str(), header.ui32FN, header.ui32TPN, header.ui32PN);                  
+  }
 
 }
 

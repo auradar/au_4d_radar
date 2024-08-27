@@ -33,14 +33,10 @@ void CommThread::sendCmdtoRadar(const char * msg)
 
 
 void CommThread::rxRadar(void)
-{
-	
-
+{	
 	while(1)
 	{
 
-
 	}
-
 }
 

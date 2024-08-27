@@ -14,10 +14,10 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <unistd.h>
-
+#include "rclcpp/rclcpp.hpp"
 
 #define TARGET_PORT	7778
-#define TARGET_IP	"192.168.10.234"	// radar Board IP
+#define TARGET_IP	"192.168.97.6"	// radar Board IP
 
 int udp_socket;
 
@@ -41,7 +41,7 @@ int soc_client(void)
 	udp_socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 	if (udp_socket == -1) 
 	{
-		std::cerr << "Error: Failed to create socket\n";
+        RCLCPP_ERROR(rclcpp::get_logger("RadarPacketHandler"), "Socket creation failed");   
 		return -1;
 	}
 
@@ -51,7 +51,7 @@ int soc_client(void)
 		return -1;
 	}
 
-	std::cout << "connect OK\n";
+    RCLCPP_INFO(rclcpp::get_logger("RadarPacketHandler"), "connect OK");    
 
 	return 0;
 }
@@ -62,8 +62,7 @@ int soc_recv(char* rx_buff, uint32_t size)
 	uint32_t server_struct_length = sizeof(server_addr);
 	int32_t len = 0;
 
-	// Receive the server's response:
-	if((len =  recvfrom(udp_socket, (char *)rx_buff, size, MSG_DONTWAIT, (struct sockaddr*)&gRemoteSock, &server_struct_length)) < 0)
+	if((len = recvfrom(udp_socket, (char *)rx_buff, size, MSG_DONTWAIT, (struct sockaddr*)&gRemoteSock, &server_struct_length)) < 0)
 	{
 		return -1;
 	}
@@ -76,11 +75,10 @@ int soc_send(const char* msg)
 	int send_len = sendto(udp_socket, msg, strlen(msg), 0, (struct sockaddr*)&gRemoteSock, sizeof(struct sockaddr));
 	if (send_len == -1) 
 	{
-		std::cerr << "Error: Failed to send message\n";
+        RCLCPP_ERROR(rclcpp::get_logger("socket"), "Error: Failed to send message"); 		
 		return -1;
 	}
-	std::cout << "Message sent" << msg << std::endl;
-
+    RCLCPP_INFO(rclcpp::get_logger("RadarPacketHandler"), "Message sent msg: %s", msg);   
 	return 0;
 }
 
