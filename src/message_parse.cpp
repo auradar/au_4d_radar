@@ -2,8 +2,8 @@
  * @file message_parse.cpp
  * @author kisoo.kim@au-sensor.com, antonioko@au-sensor.com
  * @brief Implementation of the MessageParser class for parsing radar data.
- * @version 0.3
- * @date 2024-08-14
+ * @version 1.0
+ * @date 2024-08-23
  * 
  * @copyright Copyright AU (c) 2024
  * 
@@ -11,7 +11,8 @@
 
 
 #include <iostream>
-#include "message_parse.hpp"
+#include "au_4d_radar.hpp"
+// #include "message_parse.hpp"
 #include "uuid_helper.hpp"
 #include "util/conversion.hpp"
 
@@ -49,7 +50,7 @@ void MessageParser::parse_radar_data(uint8_t *p_buff, uint32_t *message_type, ra
         idx += 2;
 
         if(header.ui32PN > 60){ // 60
-            std::cerr << "Failed to decode parse_radar_data." << " header.ui32PN: " << header.ui32PN << std::endl;
+            RCLCPP_ERROR(rclcpp::get_logger("MessageParser"), "Failed to decode parse_radar_data ui32PN: %u", header.ui32PN);               
             return;
         }
 
@@ -114,19 +115,15 @@ void MessageParser::parse_radar_data(uint8_t *p_buff, uint32_t *message_type, ra
       
     } else if(id == HEADER_MON) {
         std::cerr << "HEADER_MON message." << std::endl;
+        RCLCPP_INFO(rclcpp::get_logger("MessageParser"), "HEADER_MON message");         
     }  else {
-        std::cerr << "Failed to decode message " << " id : " << std::hex << id << std::endl;
+        RCLCPP_INFO(rclcpp::get_logger("MessageParser"), "Failed to decode message id: %08x", id);           
     }
 
     if(id == HEADER_SCAN || id == HEADER_TRACK){
-        std::cout << "parse_radar_data::" 
-                << " id : " << std::hex << id
-                << " frame_id: " << frame_id_
-                << " ui32FN: " << header.ui32FN
-                << " ui32TPN: " << header.ui32TPN
-                << " ui32PN: " << header.ui32PN                
-                << " ui16TPCKN: " << header.ui16TPCKN
-                << std::endl;
+            RCLCPP_INFO(rclcpp::get_logger("MessageParser"), 
+            "id: %08x frame_id: %s ui32FN: %u ui32TPN: %u ui32PN: %u", 
+             id, frame_id_.c_str(), header.ui32FN, header.ui32TPN, header.ui32PN);                  
     }
 }
 

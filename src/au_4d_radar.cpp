@@ -2,8 +2,8 @@
  * @file au_4d_radar.cpp
  * @author kisoo.kim@au-sensor.com, antonioko@au-sensor.com
  * @brief 
- * @version 0.3
- * @date 2024-08-14
+ * @version 1.0
+ * @date 2024-08-23
  * 
  * @copyright Copyright AU (c) 2024
  * 
@@ -27,16 +27,10 @@ device_au_radar_node::device_au_radar_node(const rclcpp::NodeOptions & options)
   heart_beat_(this), radar_handler_(this)  
 {
     instance_ = this;
-
-    std::cout << "device_au_radar_node() start" << std::endl;
   
     // timer_ = this->create_wall_timer(
     //     PUB_TIME, 
     //     std::bind(&device_au_radar_node::publish, this));
-
-    // timer_mon_ = this->create_wall_timer(
-    //     MON_TIME, 
-    //     std::bind(&device_au_radar_node::monitor, this));
 
     pub_radar_scan = this->create_publisher<radar_msgs::msg::RadarScan>(
                     "/device/au/radar/scan",
@@ -61,7 +55,7 @@ void device_au_radar_node::interruptHandler(int sig) {
     RCLCPP_ERROR(rclcpp::get_logger("interruptHandler"), "signum=%d", sig);
 
     if (sig == SIGINT || sig == SIGHUP || sig == SIGKILL || sig == SIGSEGV || sig == SIGTERM) {
-        std::cerr << "device_au_radar_node::interruptHandler performed" << std::endl;
+        RCLCPP_INFO(rclcpp::get_logger("device_au_radar_node"), "device_au_radar_node::interruptHandler performed");
 
         instance_->stopRadarPacketHandler();
         instance_->stopHeartbeatHandler();
@@ -81,21 +75,6 @@ void device_au_radar_node::get_param(rclcpp::Node::SharedPtr nh, const std::stri
     }
 }
 
-void device_au_radar_node::publish() {
-    // uint8_t buffer[UDP_MTU] = {0};
-    // int32_t len = 0;
-    // uint32_t message_type;
-
-    // if ((len = soc_recv((char *)buffer, UDP_MTU)) > 0) {
-    //     message_parser_.parse_radar_data(buffer, &message_type, radar_scan_msg, radar_tracks_msg);
-    //     if(message_type == HEADER_SCAN){
-    //         pub_radar_scan->publish(radar_scan_msg);
-    //     } else if(message_type == HEADER_TRACK){
-    //         pub_radar_track->publish(radar_tracks_msg);  
-    //     }
-    // }
-}
-
 void device_au_radar_node::publishRadarData(uint32_t message_type, radar_msgs::msg::RadarScan &radar_scan_msg, radar_msgs::msg::RadarTracks &radar_tracks_msg) {
     if(message_type == HEADER_SCAN){
         pub_radar_scan->publish(radar_scan_msg);
@@ -104,22 +83,10 @@ void device_au_radar_node::publishRadarData(uint32_t message_type, radar_msgs::m
     }
 }
 
-void device_au_radar_node::monitor() {
-    static uint32_t temp_cnt(0);
-
-    mon_msgs::msg::RadarHealth radar_health_msg;
-    radar_health_msg.status = temp_cnt++;
-
-    std::cout << "publish radar health msgs: " << radar_health_msg.status << std::endl;
-    pub_radar_mon->publish(radar_health_msg);  
-}
-
 void device_au_radar_node::publishHeartbeat(mon_msgs::msg::RadarHealth &radar_health_msg) {
-    std::cout << "publish radar health msgs " 
-              << "client_hostname : " << radar_health_msg.client_hostname
-              << " status: " << radar_health_msg.status
-              << " tv_sec: " << radar_health_msg.tv_sec
-              << std::endl;
+    // RCLCPP_INFO(rclcpp::get_logger("device_au_radar_node"), 
+    // "publish radar health msgs client_hostname : %s status: %u tv_sec: %u", 
+    // radar_health_msg.client_hostname.c_str(), radar_health_msg.status, radar_health_msg.tv_sec);  
 
     pub_radar_mon->publish(radar_health_msg);  
 }

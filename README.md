@@ -85,11 +85,11 @@ mkdir build
 cd build
 
 # Configure to build both static and shared libraries
-cmake .. -DCMAKE_BUILD_TYPE         = Release \
-      -DFLATBUFFERS_STATIC_FLATC    = ON \
-      -DFLATBUFFERS_BUILD_SHAREDLIB = OFF \
-      -DFLATBUFFERS_BUILD_CPP17     = ON \
-      -DCMAKE_INSTALL_PREFIX        = /usr/local
+cmake .. -DCMAKE_BUILD_TYPE=Release \
+      -DFLATBUFFERS_STATIC_FLATC=ON \
+      -DFLATBUFFERS_BUILD_SHAREDLIB=OFF \
+      -DFLATBUFFERS_BUILD_CPP17=ON \
+      -DCMAKE_INSTALL_PREFIX=/usr/local
 
 make -j$(nproc)
 sudo make install
