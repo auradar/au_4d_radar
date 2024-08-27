@@ -11,8 +11,12 @@ mkdir -p ~/share/ros2_ws/src
 
 **Download AuRadar4D ROS2 Source code**:
 ```
-cd ~/share/ros2_ws/src
+$ cd ~/share/ros2_ws/src
+$ export VERSION=v1.0
 $ git clone https://github.com/auradar/au_4d_radar.git
+$ cd au_4d_radar
+$ git checkout $VERSION
+$ git submodule update --init --recursive
 ```
 
 **Download radar messages**:
