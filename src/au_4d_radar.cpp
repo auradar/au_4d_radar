@@ -193,6 +193,11 @@ void device_au_radar_node::parse_radar_data(uint8_t * p_buff)
 		idx += 2;
 		header.ui16PCKN = 	convetr_to_uint16(&p_buff[idx]);
 		idx += 2;
+
+	        if(header.ui32PN > 60){ // 60
+	            std::cerr << "Failed to decode parse_radar_data." << " header.ui32PN: " << header.ui32PN << std::endl;
+	            return;
+	        }
 		
 		frame_id	= std::to_string(header.ui32FN); 
 		stamp_tv_sec = header.tv_sec;
