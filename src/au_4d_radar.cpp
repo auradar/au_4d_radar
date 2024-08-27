@@ -188,11 +188,12 @@ void device_au_radar_node::parse_radar_data(uint8_t * p_buff)
 		header.ui32TPN = 	  convert_to_uint32(&p_buff[idx]);
 		idx += 4;
 		header.ui32PN = 	  convert_to_uint32(&p_buff[idx]);
-		idx += 2;
+		idx += 4;
 		header.ui16TPCKN = 	convetr_to_uint16(&p_buff[idx]);
 		idx += 2;
 		header.ui16PCKN = 	convetr_to_uint16(&p_buff[idx]);
-
+		idx += 2;
+		
 		frame_id	= std::to_string(header.ui32FN); 
 		stamp_tv_sec = header.tv_sec;
 		stamp_tv_nsec = header.tv_nsec;
