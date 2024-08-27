@@ -78,7 +78,7 @@ int soc_send(const char* msg)
         RCLCPP_ERROR(rclcpp::get_logger("socket"), "Error: Failed to send message"); 		
 		return -1;
 	}
-    RCLCPP_INFO(rclcpp::get_logger("RadarPacketHandler"), "Message sent msg: %s", msg);   
+    //RCLCPP_INFO(rclcpp::get_logger("RadarPacketHandler"), "Message sent msg: %s", msg);   
 	return 0;
 }
 
