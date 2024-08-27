@@ -100,7 +100,7 @@ void RadarPacketHandler::receive_messages() {
         int n = recvfrom(rd_sockfd, (uint8_t *)buffer, BUFFER_SIZE, MSG_DONTWAIT, (struct sockaddr*)&client_addr_, &addr_len);
         if (n < 0) {
             if (errno != EAGAIN && errno != EWOULDBLOCK) {
-                RCLCPP_ERROR(rclcpp::get_logger("RadarPacketHandler"), "RadarPacketHandler recvfrom failed");                 
+                RCLCPP_ERROR(rclcpp::get_logger("RadarPacketHandler"), "recvfrom failed");                 
             }
             continue;
         }
@@ -120,7 +120,7 @@ int RadarPacketHandler::send_messages(const char* msg, const char* addr) {
 
     int send_len = sendto(rd_sockfd, msg, strlen(msg), 0, (struct sockaddr*)&client_addr, sizeof(client_addr));
     if (send_len == -1) {
-        RCLCPP_ERROR(rclcpp::get_logger("RadarPacketHandler"), "Error: Failed to send message");         
+        RCLCPP_ERROR(rclcpp::get_logger("RadarPacketHandler"), "Failed to send message");         
         return -1;
     }
     RCLCPP_INFO(rclcpp::get_logger("RadarPacketHandler"), "Message sent: %s msg: %s", addr, msg);      

@@ -114,7 +114,6 @@ void MessageParser::parse_radar_data(uint8_t *p_buff, uint32_t *message_type, ra
         }
       
     } else if(id == HEADER_MON) {
-        std::cerr << "HEADER_MON message." << std::endl;
         RCLCPP_INFO(rclcpp::get_logger("MessageParser"), "HEADER_MON message");         
     }  else {
         RCLCPP_INFO(rclcpp::get_logger("MessageParser"), "Failed to decode message id: %08x", id);           

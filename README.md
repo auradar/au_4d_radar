@@ -1,7 +1,7 @@
 Overview
 ========
 
-au_4d_radar is a collection of ROS2 packages supporting AU 4D Radar.
+au_4d_radar is a collection of ROS2 packages supporting 4D Radar Sensors.
 This program has been tested on ubuntu 22.04 ROS2 humble.
 
 **Create a new work directory of ROS2**:
@@ -71,7 +71,8 @@ source install/local_setup.bash
 ros2 component load /ComponentManager au_4d_radar au_4d_radar::device_au_radar_node
 ```
 
-**FlatBuffers Install**:
+**Install FlatBuffers**:
+=============
 ```
 1. Download flatbuf
 export VERSION=v24.3.25

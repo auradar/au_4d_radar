@@ -171,17 +171,16 @@ void Heartbeat::processHeartbeatMessage(const uint8_t* buffer, const std::string
             char time_str[64];
             strftime(time_str, sizeof(time_str), "%Y-%m-%d %H:%M:%S", timeinfo);
             setClientIp(receivedIp);
-            radar_node_->radar_handler_.send_messages("SS", receivedIp.c_str()); 
 
             radar_health_msg.client_hostname = HeartbeatHostname;
             radar_health_msg.status = Heartbeat->status();
             radar_health_msg.tv_sec = Heartbeat->timestamp();
 
-            RCLCPP_INFO(rclcpp::get_logger("Heartbeat"), 
-            "client_hostname : %s status: %u tv_sec: %u", 
-            radar_health_msg.client_hostname.c_str(), radar_health_msg.status, radar_health_msg.tv_sec);  
+            RCLCPP_INFO(rclcpp::get_logger("Heartbeat"), "client_hostname : %s status: %u tv_sec: %u", 
+                        radar_health_msg.client_hostname.c_str(), radar_health_msg.status, radar_health_msg.tv_sec);  
 
             radar_node_->publishHeartbeat(radar_health_msg);  
+            radar_node_->radar_handler_.send_messages("SS", receivedIp.c_str()); 
     }
 }
 
@@ -195,7 +194,7 @@ void Heartbeat::handleClientMessages() {
             RCLCPP_ERROR(rclcpp::get_logger("Heartbeat"), "Failed recvfrom n < 0");              
             continue;
         } else if (n > BUFFER_SIZE) {
-            RCLCPP_ERROR(rclcpp::get_logger("Heartbeat"), "Received message size exceeds buffer size");                 
+            RCLCPP_ERROR(rclcpp::get_logger("Heartbeat"), "message size exceeds buffer size");                 
             continue;
         }
 
@@ -249,7 +248,7 @@ void Heartbeat::setClientIp(const std::string& newIp) {
     if (clientIp != newIp) {
         clientIp = newIp;   
         connected = true;                   
-        RCLCPP_INFO(rclcpp::get_logger("Heartbeat"), "Client IP set to: %s", clientIp.c_str());            
+        //RCLCPP_INFO(rclcpp::get_logger("Heartbeat"), "Client IP set to: %s", clientIp.c_str());            
     }
 }
 
