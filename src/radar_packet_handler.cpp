@@ -123,7 +123,7 @@ int RadarPacketHandler::send_messages(const char* msg, const char* addr) {
         RCLCPP_ERROR(rclcpp::get_logger("RadarPacketHandler"), "Failed to send message");         
         return -1;
     }
-    RCLCPP_INFO(rclcpp::get_logger("RadarPacketHandler"), "Message sent: %s msg: %s", addr, msg);      
+    //RCLCPP_INFO(rclcpp::get_logger("RadarPacketHandler"), "Message sent: %s msg: %s", addr, msg);      
     return 0;
 }
 
