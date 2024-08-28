@@ -23,9 +23,8 @@
 namespace au_4d_radar
 {
 
-    const std::string DEFAULT_IP = "0.0.0.0" ;    // "0.0.0.0"  "200.200.200.200" "192.168.10.238"
+    const std::string DEFAULT_IP = "255.255.255.255" ;    // "255.255.255.255" "192.168.10.238"
    
-
     class device_au_radar_node: public rclcpp::Node
     {
     public:
