@@ -136,7 +136,7 @@ void Heartbeat::processRequestConnection(const uint8_t* buffer, const std::strin
     std::string receivedHostname = request->client_hostname()->str();
     if (receivedHostname.starts_with(clientHostname.substr(0, 7))) { 
         builder.Clear();
-        auto client_hostname = builder.CreateString(clientHostname);
+        auto client_hostname = builder.CreateString(receivedHostname);
         auto response        = AU::CreateResponseConnection(builder, builder.CreateString("RESPONSE_CONNECTION"), client_hostname);
         builder.Finish(response);
         size_t buff_size = builder.GetSize() + MSSG_OFFSET;

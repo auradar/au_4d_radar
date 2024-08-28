@@ -65,6 +65,7 @@ void MessageParser::parse_radar_data(uint8_t *p_buff, uint32_t *message_type, ra
         radar_scan_msg.header.stamp.sec = stamp_tv_sec_;
         radar_scan_msg.header.stamp.nanosec = stamp_tv_nsec_;
 
+		//Point cloud
         for(uint32_t i = 0; i < header.ui32PN; i++)
         {
             radar_msgs::msg::RadarReturn return_msg;
@@ -87,6 +88,7 @@ void MessageParser::parse_radar_data(uint8_t *p_buff, uint32_t *message_type, ra
         radar_tracks_msg.header.stamp.sec = stamp_tv_sec_;	
         radar_tracks_msg.header.stamp.nanosec = stamp_tv_nsec_;
 
+		//Tracking
         for(int i = 0; i < 3; i++)
         {
             radar_msgs::msg::RadarTrack radar_data_msg;
