@@ -134,7 +134,7 @@ void Heartbeat::processRequestConnection(const uint8_t* buffer, const std::strin
     }
 
     std::string receivedHostname = request->client_hostname()->str();
-    if (receivedHostname.starts_with(clientHostname.substr(0, 7))) { 
+    if (clientHostname.starts_with(receivedHostname.substr(0, 7))) { 
         builder.Clear();
         auto client_hostname = builder.CreateString(receivedHostname);
         auto response        = AU::CreateResponseConnection(builder, builder.CreateString("RESPONSE_CONNECTION"), client_hostname);
@@ -143,8 +143,7 @@ void Heartbeat::processRequestConnection(const uint8_t* buffer, const std::strin
         std::vector<uint8_t> buff(buff_size);
         Conversion::uint32_to_big_endian(MessageType::RESPONSE_CONNECTION, buff.data()); 
         memcpy(&buff[MSSG_OFFSET], builder.GetBufferPointer(), builder.GetSize());
-
-        //if (inet_pton(AF_INET, clientIp.c_str(), &send_server_addr.sin_addr) <= 0) {        
+     
         if (inet_pton(AF_INET, receivedIp.c_str(), &send_server_addr.sin_addr) <= 0) {      
             RCLCPP_ERROR(rclcpp::get_logger("Heartbeat"), "Invalid IP address format: %s", receivedIp.c_str());              
             send_server_addr.sin_addr.s_addr = INADDR_BROADCAST;            
