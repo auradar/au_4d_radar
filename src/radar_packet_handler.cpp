@@ -27,9 +27,7 @@ namespace au_4d_radar
 {
 
 RadarPacketHandler::RadarPacketHandler(device_au_radar_node* node)
-    : rd_sockfd(-1), radar_running(true), radar_node_(node) {
-    memset(&client_addr_, 0, sizeof(client_addr_));
-}
+    : rd_sockfd(-1), radar_running(true), radar_node_(node) {}
 
 RadarPacketHandler::~RadarPacketHandler() {
     stop();
@@ -37,7 +35,7 @@ RadarPacketHandler::~RadarPacketHandler() {
 
 void RadarPacketHandler::start() {
     if (initialize()) {
-        thread_ = std::thread(&RadarPacketHandler::receive_messages, this);
+        thread_ = std::thread(&RadarPacketHandler::receiveMessages, this);
     } else {
         RCLCPP_ERROR(rclcpp::get_logger("RadarPacketHandler"), "Initialization failed, start aborted.");     
     }
@@ -85,7 +83,7 @@ bool RadarPacketHandler::initialize() {
     return true;
 }
 
-void RadarPacketHandler::receive_messages() {
+void RadarPacketHandler::receiveMessages() {
 #if (POINT_CLOUD2)    
     sensor_msgs::msg::PointCloud2 radar_cloud_msg;    
 #else    
@@ -111,16 +109,16 @@ void RadarPacketHandler::receive_messages() {
         }
         buffer[n] = '\0';
 #if (POINT_CLOUD2)
-        message_parser_.parse_radar_data(buffer, &message_type, radar_cloud_msg, radar_tracks_msg);
-        radar_node_->publishRadarPoint_cloud2(message_type, radar_cloud_msg, radar_tracks_msg);
+        message_parser_.parseRadarData(buffer, &message_type, radar_cloud_msg, radar_tracks_msg);
+        radar_node_->publishRadarPointCloud2(message_type, radar_cloud_msg, radar_tracks_msg);
 #else
-        message_parser_.parse_radar_data(buffer, &message_type, radar_scan_msg, radar_tracks_msg);
+        message_parser_.parseRadarData(buffer, &message_type, radar_scan_msg, radar_tracks_msg);
         radar_node_->publishRadarData(message_type, radar_scan_msg, radar_tracks_msg);
 #endif        
     }
 }
 
-int RadarPacketHandler::send_messages(const char* msg, const char* addr) {
+int RadarPacketHandler::sendMessages(const char* msg, const char* addr) {
     struct sockaddr_in client_addr;
     memset(&client_addr, 0, sizeof(client_addr));
     client_addr.sin_family = AF_INET;

@@ -87,7 +87,7 @@ void device_au_radar_node::publishRadarData(uint32_t message_type, radar_msgs::m
     }
 }
 
-void device_au_radar_node::publishRadarPoint_cloud2(uint32_t message_type, sensor_msgs::msg::PointCloud2& radar_cloud_msg, radar_msgs::msg::RadarTracks& radar_tracks_msg) {
+void device_au_radar_node::publishRadarPointCloud2(uint32_t message_type, sensor_msgs::msg::PointCloud2& radar_cloud_msg, radar_msgs::msg::RadarTracks& radar_tracks_msg) {
     if(message_type == HEADER_SCAN){
         pub_radar_point_cloud2->publish(radar_cloud_msg);
     } else if(message_type == HEADER_TRACK){

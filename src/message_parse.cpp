@@ -23,7 +23,7 @@
 namespace au_4d_radar
 {
 
-void MessageParser::make_radar_point_cloud2_msg(uint8_t *p_buff, sensor_msgs::msg::PointCloud2& cloud_msg) {
+void MessageParser::makeRadarPointCloud2Mssg(uint8_t *p_buff, sensor_msgs::msg::PointCloud2& cloud_msg) {
     uint32_t idx = 0;
     tsPacketHeader header = {};
     std::stringstream ss;
@@ -49,7 +49,7 @@ void MessageParser::make_radar_point_cloud2_msg(uint8_t *p_buff, sensor_msgs::ms
     idx += 2;
 
     if(header.ui32PN > 60){ // 60
-        RCLCPP_ERROR(rclcpp::get_logger("point_cloud2_msg"), "Failed to decode parse_radar_data ui32PN: %u", header.ui32PN);               
+        RCLCPP_ERROR(rclcpp::get_logger("point_cloud2_msg"), "Failed to decode parseRadarData ui32PN: %u", header.ui32PN);               
         return;
     }
 
@@ -134,7 +134,7 @@ void MessageParser::make_radar_point_cloud2_msg(uint8_t *p_buff, sensor_msgs::ms
         
 }
 
-void MessageParser::make_radar_scan_msg(uint8_t *p_buff, radar_msgs::msg::RadarScan& radar_scan_msg) {
+void MessageParser::makeRadarScanMssg(uint8_t *p_buff, radar_msgs::msg::RadarScan& radar_scan_msg) {
     uint32_t idx = 0;
     tsPacketHeader header = {};
     std::stringstream ss;
@@ -160,7 +160,7 @@ void MessageParser::make_radar_scan_msg(uint8_t *p_buff, radar_msgs::msg::RadarS
     idx += 2;
 
     if(header.ui32PN > 60){ // 60
-        RCLCPP_ERROR(rclcpp::get_logger("radar_scan_msg"), "Failed to decode parse_radar_data ui32PN: %u", header.ui32PN);               
+        RCLCPP_ERROR(rclcpp::get_logger("radar_scan_msg"), "Failed to decode parseRadarData ui32PN: %u", header.ui32PN);               
         return;
     }
 
@@ -198,7 +198,7 @@ void MessageParser::make_radar_scan_msg(uint8_t *p_buff, radar_msgs::msg::RadarS
         
 }
 
-void MessageParser::make_radar_tracks_msg(uint8_t *p_buff, radar_msgs::msg::RadarTracks &radar_tracks_msg) {
+void MessageParser::makeRadarTracksMssg(uint8_t *p_buff, radar_msgs::msg::RadarTracks &radar_tracks_msg) {
     uint32_t idx = 0;
     tsPacketHeader header = {};
     std::stringstream ss;
@@ -242,7 +242,7 @@ void MessageParser::make_radar_tracks_msg(uint8_t *p_buff, radar_msgs::msg::Rada
     }
 }
 
-void MessageParser::parse_radar_data(uint8_t *p_buff, uint32_t *message_type, 
+void MessageParser::parseRadarData(uint8_t *p_buff, uint32_t *message_type, 
     #if (POINT_CLOUD2)
     sensor_msgs::msg::PointCloud2& radar_cloud_msg,
     #else
@@ -256,12 +256,12 @@ void MessageParser::parse_radar_data(uint8_t *p_buff, uint32_t *message_type,
 
     if(id == HEADER_SCAN) {
 #if (POINT_CLOUD2)
-        make_radar_point_cloud2_msg(p_buff, radar_cloud_msg);  
+        makeRadarPointCloud2Mssg(p_buff, radar_cloud_msg);  
 #else        
-        make_radar_scan_msg(p_buff, radar_scan_msg);       
+        makeRadarScanMssg(p_buff, radar_scan_msg);       
 #endif                         
     } else if(id == HEADER_TRACK) {
-        make_radar_tracks_msg(p_buff, radar_tracks_msg);           
+        makeRadarTracksMssg(p_buff, radar_tracks_msg);           
     } else if(id == HEADER_MON) {
         RCLCPP_INFO(rclcpp::get_logger("MessageParser"), "HEADER_MON message");         
     }  else {

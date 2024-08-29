@@ -36,11 +36,11 @@ namespace au_4d_radar
 
         void start();
         void stop();
-        int send_messages(const char* msg, const char* addr);
+        int sendMessages(const char* msg, const char* addr);
 
     private:
         bool initialize();
-        void receive_messages(); 
+        void receiveMessages(); 
 
         int rd_sockfd;
         struct sockaddr_in server_addr_;

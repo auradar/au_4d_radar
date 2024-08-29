@@ -30,7 +30,7 @@ namespace au_4d_radar
         explicit device_au_radar_node(const rclcpp::NodeOptions& options);
         void publishHeartbeat(mon_msgs::msg::RadarHealth& radar_health_msg);
         void publishRadarData(uint32_t message_type, radar_msgs::msg::RadarScan &radar_scan_msg, radar_msgs::msg::RadarTracks &radar_tracks_msg);
-        void publishRadarPoint_cloud2(uint32_t message_type, sensor_msgs::msg::PointCloud2& radar_cloud_msg, radar_msgs::msg::RadarTracks& radar_tracks_msg);
+        void publishRadarPointCloud2(uint32_t message_type, sensor_msgs::msg::PointCloud2& radar_cloud_msg, radar_msgs::msg::RadarTracks& radar_tracks_msg);
 
         Heartbeat heart_beat_; 
         RadarPacketHandler radar_handler_;    
