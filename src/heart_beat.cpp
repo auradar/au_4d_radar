@@ -180,7 +180,7 @@ void Heartbeat::processHeartbeatMessage(const uint8_t* buffer, const std::string
                         radar_health_msg.client_hostname.c_str(), radar_health_msg.status, radar_health_msg.tv_sec);  
 
             radar_node_->publishHeartbeat(radar_health_msg);  
-            radar_node_->radar_handler_.send_messages("SS", receivedIp.c_str()); 
+            radar_node_->radar_handler_.sendMessages("SS", receivedIp.c_str()); 
     }
 }
 
