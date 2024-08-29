@@ -63,7 +63,7 @@ void MessageParser::makeRadarPointCloud2Mssg(uint8_t *p_buff, sensor_msgs::msg::
     RCLCPP_INFO(rclcpp::get_logger("point_cloud2_msg"), "frame_id: %s ui32FN: %u ui32TPN: %u ui32PN: %u", 
                                                     frame_id_.c_str(), header.ui32FN, header.ui32TPN, header.ui32PN); 
 
-    // Fill in the PointCloud2 header
+    // https://github.com/ros2/common_interfaces/blob/rolling/sensor_msgs/msg/PointCloud2.msg
     cloud_msg.header.frame_id = frame_id_;
     cloud_msg.header.stamp.sec = stamp_tv_sec_;
     cloud_msg.header.stamp.nanosec = stamp_tv_nsec_;
@@ -75,10 +75,10 @@ void MessageParser::makeRadarPointCloud2Mssg(uint8_t *p_buff, sensor_msgs::msg::
     // Set fields for x, y, z, and intensity
     cloud_msg.fields.resize(4);
 
-    cloud_msg.fields[0].name = "x";
-    cloud_msg.fields[0].offset = 0;
+    cloud_msg.fields[0].name     = "x";
+    cloud_msg.fields[0].offset   = 0;
     cloud_msg.fields[0].datatype = sensor_msgs::msg::PointField::FLOAT32;
-    cloud_msg.fields[0].count = 1;
+    cloud_msg.fields[0].count    = 1;
 
     cloud_msg.fields[1].name = "y";
     cloud_msg.fields[1].offset = 4;
@@ -107,7 +107,7 @@ void MessageParser::makeRadarPointCloud2Mssg(uint8_t *p_buff, sensor_msgs::msg::
     for (uint32_t i = 0; i < header.ui32PN; i++) {
         float range = Conversion::convertToFloat(&p_buff[idx]);
         idx += 4;
-        // Skip doppler_velocity (4 bytes)
+          // Skip doppler_velocity (4 bytes)
         idx += 4;
         float azimuth = Conversion::convertToFloat(&p_buff[idx]);
         idx += 4;
