@@ -36,9 +36,9 @@ namespace au_4d_radar
     struct tsPacketHeader
     {
         uint32_t ui32SB;
-        uint32_t uniq_id;             
-        uint32_t tv_sec;
-        uint32_t tv_nsec;
+        uint32_t ui32UID;             
+        uint32_t ui32TS;
+        uint32_t ui32TN;
         uint32_t ui32FN;
         float    f32CT;
         uint32_t ui32TPN;

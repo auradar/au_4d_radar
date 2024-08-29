@@ -29,23 +29,23 @@ void MessageParser::makeRadarPointCloud2Mssg(uint8_t *p_buff, sensor_msgs::msg::
     std::stringstream ss;
 
     idx += 4;
-    header.uniq_id = Conversion::little_endian_to_uint32(&p_buff[idx]);
+    header.ui32UID = Conversion::littleEndianToUint32(&p_buff[idx]);
     idx += 4;
-    header.tv_sec = Conversion::little_endian_to_uint32(&p_buff[idx]);        
+    header.ui32TS = Conversion::littleEndianToUint32(&p_buff[idx]);        
     idx += 4;
-    header.tv_nsec = Conversion::little_endian_to_uint32(&p_buff[idx]);
+    header.ui32TN = Conversion::littleEndianToUint32(&p_buff[idx]);
     idx += 4;
-    header.ui32FN = Conversion::little_endian_to_uint32(&p_buff[idx]);
+    header.ui32FN = Conversion::littleEndianToUint32(&p_buff[idx]);
     idx += 4;
-    header.f32CT = Conversion::convert_to_float(&p_buff[idx]);
+    header.f32CT = Conversion::convertToFloat(&p_buff[idx]);
     idx += 4;
-    header.ui32TPN = Conversion::little_endian_to_uint32(&p_buff[idx]);
+    header.ui32TPN = Conversion::littleEndianToUint32(&p_buff[idx]);
     idx += 4;
-    header.ui32PN = Conversion::little_endian_to_uint32(&p_buff[idx]);
+    header.ui32PN = Conversion::littleEndianToUint32(&p_buff[idx]);
     idx += 4;
-    header.ui16TPCKN = Conversion::little_endian_to_uint16(&p_buff[idx]);
+    header.ui16TPCKN = Conversion::littleEndianToUint16(&p_buff[idx]);
     idx += 2;
-    header.ui16PCKN = Conversion::little_endian_to_uint16(&p_buff[idx]);
+    header.ui16PCKN = Conversion::littleEndianToUint16(&p_buff[idx]);
     idx += 2;
 
     if(header.ui32PN > 60){ // 60
@@ -55,10 +55,10 @@ void MessageParser::makeRadarPointCloud2Mssg(uint8_t *p_buff, sensor_msgs::msg::
 
     // https://github.com/ros2/common_interfaces/blob/rolling/std_msgs/msg/Header.msg
     //sequence_id_ = header.ui32FN; 
-    ss << std::hex << header.uniq_id;
+    ss << std::hex << header.ui32UID;
     frame_id_ = ss.str();
-    stamp_tv_sec_ = header.tv_sec;
-    stamp_tv_nsec_ = header.tv_nsec;
+    stamp_tv_sec_ = header.ui32TS;
+    stamp_tv_nsec_ = header.ui32TN;
 
     RCLCPP_INFO(rclcpp::get_logger("point_cloud2_msg"), "frame_id: %s ui32FN: %u ui32TPN: %u ui32PN: %u", 
                                                     frame_id_.c_str(), header.ui32FN, header.ui32TPN, header.ui32PN); 
@@ -105,17 +105,17 @@ void MessageParser::makeRadarPointCloud2Mssg(uint8_t *p_buff, sensor_msgs::msg::
 
     // Populate the point cloud data
     for (uint32_t i = 0; i < header.ui32PN; i++) {
-        float range = Conversion::convert_to_float(&p_buff[idx]);
+        float range = Conversion::convertToFloat(&p_buff[idx]);
         idx += 4;
 
         // Skip doppler_velocity (4 bytes)
         idx += 4;
 
-        float azimuth = Conversion::convert_to_float(&p_buff[idx]);
+        float azimuth = Conversion::convertToFloat(&p_buff[idx]);
         idx += 4;
-        float elevation = Conversion::convert_to_float(&p_buff[idx]);
+        float elevation = Conversion::convertToFloat(&p_buff[idx]);
         idx += 4;
-        float amplitude = Conversion::convert_to_float(&p_buff[idx]);
+        float amplitude = Conversion::convertToFloat(&p_buff[idx]);
         idx += 4;
 
         // Convert to Cartesian coordinates
@@ -140,23 +140,23 @@ void MessageParser::makeRadarScanMssg(uint8_t *p_buff, radar_msgs::msg::RadarSca
     std::stringstream ss;
 
     idx += 4;
-    header.uniq_id = Conversion::little_endian_to_uint32(&p_buff[idx]);
+    header.ui32UID = Conversion::littleEndianToUint32(&p_buff[idx]);
     idx += 4;
-    header.tv_sec = Conversion::little_endian_to_uint32(&p_buff[idx]);        
+    header.ui32TS = Conversion::littleEndianToUint32(&p_buff[idx]);        
     idx += 4;
-    header.tv_nsec = Conversion::little_endian_to_uint32(&p_buff[idx]);
+    header.ui32TN = Conversion::littleEndianToUint32(&p_buff[idx]);
     idx += 4;
-    header.ui32FN = Conversion::little_endian_to_uint32(&p_buff[idx]);
+    header.ui32FN = Conversion::littleEndianToUint32(&p_buff[idx]);
     idx += 4;
-    header.f32CT = Conversion::convert_to_float(&p_buff[idx]);
+    header.f32CT = Conversion::convertToFloat(&p_buff[idx]);
     idx += 4;
-    header.ui32TPN = Conversion::little_endian_to_uint32(&p_buff[idx]);
+    header.ui32TPN = Conversion::littleEndianToUint32(&p_buff[idx]);
     idx += 4;
-    header.ui32PN = Conversion::little_endian_to_uint32(&p_buff[idx]);
+    header.ui32PN = Conversion::littleEndianToUint32(&p_buff[idx]);
     idx += 4;
-    header.ui16TPCKN = Conversion::little_endian_to_uint16(&p_buff[idx]);
+    header.ui16TPCKN = Conversion::littleEndianToUint16(&p_buff[idx]);
     idx += 2;
-    header.ui16PCKN = Conversion::little_endian_to_uint16(&p_buff[idx]);
+    header.ui16PCKN = Conversion::littleEndianToUint16(&p_buff[idx]);
     idx += 2;
 
     if(header.ui32PN > 60){ // 60
@@ -166,10 +166,10 @@ void MessageParser::makeRadarScanMssg(uint8_t *p_buff, radar_msgs::msg::RadarSca
 
    // https://github.com/ros2/common_interfaces/blob/rolling/std_msgs/msg/Header.msg
     //sequence_id_ = header.ui32FN; 
-    ss << std::hex << header.uniq_id;
+    ss << std::hex << header.ui32UID;
     frame_id_ = ss.str();
-    stamp_tv_sec_ = header.tv_sec;
-    stamp_tv_nsec_ = header.tv_nsec;
+    stamp_tv_sec_ = header.ui32TS;
+    stamp_tv_nsec_ = header.ui32TN;
 
     RCLCPP_INFO(rclcpp::get_logger("radar_scan_msg"), "frame_id: %s ui32FN: %u ui32TPN: %u ui32PN: %u", 
                                                     frame_id_.c_str(), header.ui32FN, header.ui32TPN, header.ui32PN); 
@@ -182,15 +182,15 @@ void MessageParser::makeRadarScanMssg(uint8_t *p_buff, radar_msgs::msg::RadarSca
     for(uint32_t i = 0; i < header.ui32PN; i++)
     {
         radar_msgs::msg::RadarReturn return_msg;
-        return_msg.range = Conversion::convert_to_float(&p_buff[idx]);
+        return_msg.range = Conversion::convertToFloat(&p_buff[idx]);
         idx += 4;
-        return_msg.doppler_velocity = Conversion::convert_to_float(&p_buff[idx]);
+        return_msg.doppler_velocity = Conversion::convertToFloat(&p_buff[idx]);
         idx += 4;		    
-        return_msg.azimuth = Conversion::convert_to_float(&p_buff[idx]);
+        return_msg.azimuth = Conversion::convertToFloat(&p_buff[idx]);
         idx += 4;
-        return_msg.elevation = Conversion::convert_to_float(&p_buff[idx]);
+        return_msg.elevation = Conversion::convertToFloat(&p_buff[idx]);
         idx += 4;
-        return_msg.amplitude = Conversion::convert_to_float(&p_buff[idx]);
+        return_msg.amplitude = Conversion::convertToFloat(&p_buff[idx]);
         idx += 4;
 
         radar_scan_msg.returns.push_back(return_msg);
@@ -204,8 +204,8 @@ void MessageParser::makeRadarTracksMssg(uint8_t *p_buff, radar_msgs::msg::RadarT
     std::stringstream ss;
 
     idx += 4;
-    header.uniq_id = Conversion::little_endian_to_uint32(&p_buff[idx]);
-    ss << std::hex << header.uniq_id;
+    header.ui32UID = Conversion::littleEndianToUint32(&p_buff[idx]);
+    ss << std::hex << header.ui32UID;
     frame_id_ = ss.str();
 
     radar_tracks_msg.header.frame_id = frame_id_;	
@@ -251,7 +251,7 @@ void MessageParser::parseRadarData(uint8_t *p_buff, uint32_t *message_type,
     radar_msgs::msg::RadarTracks& radar_tracks_msg) 
 {
 
-    uint32_t id = Conversion::little_endian_to_uint32(&p_buff[0]);
+    uint32_t id = Conversion::littleEndianToUint32(&p_buff[0]);
     *message_type = id;
 
     if(id == HEADER_SCAN) {

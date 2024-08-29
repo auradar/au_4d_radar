@@ -141,7 +141,7 @@ void Heartbeat::processRequestConnection(const uint8_t* buffer, const std::strin
         builder.Finish(response);
         size_t buff_size = builder.GetSize() + MSSG_OFFSET;
         std::vector<uint8_t> buff(buff_size);
-        Conversion::uint32_to_big_endian(MessageType::RESPONSE_CONNECTION, buff.data()); 
+        Conversion::uint32ToBigEndian(MessageType::RESPONSE_CONNECTION, buff.data()); 
         memcpy(&buff[MSSG_OFFSET], builder.GetBufferPointer(), builder.GetSize());
      
         if (inet_pton(AF_INET, receivedIp.c_str(), &send_server_addr.sin_addr) <= 0) {      
@@ -199,7 +199,7 @@ void Heartbeat::handleClientMessages() {
         }
 
         std::string receivedIp = inAddrToString(recv_server_addr.sin_addr.s_addr);
-        uint32_t mssg_type = Conversion::big_endian_to_uint32(buffer);
+        uint32_t mssg_type = Conversion::bigEndianToUint32(buffer);
 
         switch (mssg_type) {
             case MessageType::REQUEST_CONNECTION: 
