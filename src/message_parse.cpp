@@ -107,10 +107,8 @@ void MessageParser::makeRadarPointCloud2Mssg(uint8_t *p_buff, sensor_msgs::msg::
     for (uint32_t i = 0; i < header.ui32PN; i++) {
         float range = Conversion::convertToFloat(&p_buff[idx]);
         idx += 4;
-
         // Skip doppler_velocity (4 bytes)
         idx += 4;
-
         float azimuth = Conversion::convertToFloat(&p_buff[idx]);
         idx += 4;
         float elevation = Conversion::convertToFloat(&p_buff[idx]);
