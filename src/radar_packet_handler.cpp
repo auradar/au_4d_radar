@@ -17,6 +17,7 @@
 #include <thread>
 
 #include "au_4d_radar.hpp"
+
 // #include "radar_packet_handler.hpp"
 
 #define TARGET_PORT 7778
@@ -85,7 +86,11 @@ bool RadarPacketHandler::initialize() {
 }
 
 void RadarPacketHandler::receive_messages() {
+#if (POINT_CLOUD2)    
+    sensor_msgs::msg::PointCloud2 radar_cloud_msg;    
+#else    
     radar_msgs::msg::RadarScan radar_scan_msg;
+#endif    
     radar_msgs::msg::RadarTracks radar_tracks_msg;
     uint32_t message_type;
     uint8_t buffer[BUFFER_SIZE];
@@ -105,9 +110,13 @@ void RadarPacketHandler::receive_messages() {
             continue;
         }
         buffer[n] = '\0';
-
+#if (POINT_CLOUD2)
+        message_parser_.parse_radar_data(buffer, &message_type, radar_cloud_msg, radar_tracks_msg);
+        radar_node_->publishRadarPoint_cloud2(message_type, radar_cloud_msg, radar_tracks_msg);
+#else
         message_parser_.parse_radar_data(buffer, &message_type, radar_scan_msg, radar_tracks_msg);
         radar_node_->publishRadarData(message_type, radar_scan_msg, radar_tracks_msg);
+#endif        
     }
 }
 

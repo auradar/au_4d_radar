@@ -36,6 +36,10 @@ device_au_radar_node::device_au_radar_node(const rclcpp::NodeOptions & options)
                     "/device/au/radar/scan",
                     rclcpp::SensorDataQoS());
 
+    pub_radar_point_cloud2 = this->create_publisher<sensor_msgs::msg::PointCloud2>(
+                    "/device/au/radar/point_cloud2",
+                    rclcpp::SensorDataQoS());    
+
     pub_radar_track = this->create_publisher<radar_msgs::msg::RadarTracks>(
                     "/device/au/radar/track",
                     rclcpp::SensorDataQoS());
@@ -83,7 +87,15 @@ void device_au_radar_node::publishRadarData(uint32_t message_type, radar_msgs::m
     }
 }
 
-void device_au_radar_node::publishHeartbeat(mon_msgs::msg::RadarHealth &radar_health_msg) {
+void device_au_radar_node::publishRadarPoint_cloud2(uint32_t message_type, sensor_msgs::msg::PointCloud2& radar_cloud_msg, radar_msgs::msg::RadarTracks& radar_tracks_msg) {
+    if(message_type == HEADER_SCAN){
+        pub_radar_point_cloud2->publish(radar_cloud_msg);
+    } else if(message_type == HEADER_TRACK){
+        pub_radar_track->publish(radar_tracks_msg);  
+    }
+}
+
+void device_au_radar_node::publishHeartbeat(mon_msgs::msg::RadarHealth& radar_health_msg) {
     // RCLCPP_INFO(rclcpp::get_logger("device_au_radar_node"), 
     // "publish radar health msgs client_hostname : %s status: %u tv_sec: %u", 
     // radar_health_msg.client_hostname.c_str(), radar_health_msg.status, radar_health_msg.tv_sec);  

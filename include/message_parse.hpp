@@ -21,6 +21,9 @@
 #include <radar_msgs/msg/radar_scan.hpp>
 #include <radar_msgs/msg/radar_track.hpp>
 #include <radar_msgs/msg/radar_tracks.hpp>
+#include <sensor_msgs/msg/point_cloud2.hpp>
+
+#include "config.hpp"
 
 
 namespace au_4d_radar
@@ -50,7 +53,16 @@ namespace au_4d_radar
         MessageParser()  = default;
         ~MessageParser() = default;  
 
-        void parse_radar_data(uint8_t *p_buff, uint32_t *message_type, radar_msgs::msg::RadarScan &radar_scan_msg, radar_msgs::msg::RadarTracks &radar_tracks_msg);
+        void make_radar_point_cloud2_msg(uint8_t *p_buff, sensor_msgs::msg::PointCloud2& cloud_msg);       
+        void make_radar_scan_msg(uint8_t *p_buff, radar_msgs::msg::RadarScan& radar_scan_msg);
+        void make_radar_tracks_msg(uint8_t *p_buff, radar_msgs::msg::RadarTracks& radar_tracks_msg);
+        void parse_radar_data(uint8_t *p_buff, uint32_t *message_type, 
+            #if (POINT_CLOUD2)
+            sensor_msgs::msg::PointCloud2& radar_cloud_msg,
+            #else
+            radar_msgs::msg::RadarScan& radar_scan_msg,
+            #endif
+            radar_msgs::msg::RadarTracks& radar_tracks_msg);
 
     private:
         uint32_t sequence_id_;

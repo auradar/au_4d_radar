@@ -13,7 +13,7 @@
 
 #include "rclcpp/rclcpp.hpp"
 #include "mon_msgs/msg/radar_health.hpp"
-
+#include <sensor_msgs/msg/point_cloud2.hpp>
 
 #include "radar_packet_handler.hpp"  
 #include "message_parse.hpp"
@@ -22,15 +22,15 @@
 
 namespace au_4d_radar
 {
-
     const std::string DEFAULT_IP = "255.255.255.255" ;    // "255.255.255.255" "192.168.10.238"
    
     class device_au_radar_node: public rclcpp::Node
     {
     public:
-        explicit device_au_radar_node(const rclcpp::NodeOptions & options);
-        void publishHeartbeat(mon_msgs::msg::RadarHealth &radar_health_msg);
+        explicit device_au_radar_node(const rclcpp::NodeOptions& options);
+        void publishHeartbeat(mon_msgs::msg::RadarHealth& radar_health_msg);
         void publishRadarData(uint32_t message_type, radar_msgs::msg::RadarScan &radar_scan_msg, radar_msgs::msg::RadarTracks &radar_tracks_msg);
+        void publishRadarPoint_cloud2(uint32_t message_type, sensor_msgs::msg::PointCloud2& radar_cloud_msg, radar_msgs::msg::RadarTracks& radar_tracks_msg);
 
         Heartbeat heart_beat_; 
         RadarPacketHandler radar_handler_;    
@@ -49,6 +49,7 @@ namespace au_4d_radar
         void monitor();
 
         rclcpp::Publisher<radar_msgs::msg::RadarScan>::SharedPtr pub_radar_scan;
+        rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr pub_radar_point_cloud2;        
         rclcpp::Publisher<radar_msgs::msg::RadarTracks>::SharedPtr pub_radar_track;
         rclcpp::Publisher<mon_msgs::msg::RadarHealth>::SharedPtr pub_radar_mon;
 
