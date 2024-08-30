@@ -1,16 +1,19 @@
-Overview
+AU 4D Radar
 ========
 
+## Introduction
 au_4d_radar is a collection of ROS2 packages supporting 4D Radar Sensors.
 This program has been tested on ubuntu 22.04 ROS2 humble.
 
+## How to build the au_4d_radar 
+
 **Create a new work directory of ROS2**:
-```
+```bash
 mkdir -p ~/share/ros2_ws/src
 ```
 
 **Download AU 4D Radar ROS2 Source code**:
-```
+```bash
 export VERSION=v2.0
 cd ~/share/ros2_ws/src
 $ git clone https://github.com/auradar/au_4d_radar.git
@@ -21,13 +24,13 @@ $ git submodule update --init --recursive
 ```
 
 **Download radar messages**:
-```
+```bash
 $ cd ~/share/ros2_ws/src
 $ git clone https://github.com/ros-perception/radar_msgs.git
 ```
 
 **Download monitor messages**:
-```
+```bash
 $ cd ~/share/ros2_ws/src
 $ git clone -b v2.0 https://github.com/auradar/mon_msgs.git
 ```
@@ -48,30 +51,22 @@ radars:
 ```
 
 **Compile & Run**:
-```
+```bash
 $ cd ~/share/ros2_ws
 $ colcon build --cmake-args -DCMAKE_BUILD_TYPE=Relaese --packages-up-to au_4d_radar
 ```
 
-**Running Radar Node**:
-```
-$ cd ~/share/ros2_ws
-source install/local_setup.bash
-ros2 launch au_4d_radar run_radar.launch.py
-```
-
 **Running Radar Node using launch actions**:
-```
+```bash
 $ cd ~/share/ros2_ws
 source install/local_setup.bash
 ros2 launch au_4d_radar run_radar.launch.py
 ```
 
-Run-time composition using ROS services
-=============
+## Run-time composition using ROS services
 
 **Run in shell 1**:
-```
+```bash
 In the first shell, start the component container:
 $ cd ~/share/ros2_ws
 source install/local_setup.bash
@@ -79,16 +74,15 @@ ros2 run rclcpp_components component_container
 ```
 
 **Run in shell 2**:
-```
+```bash
 In the second shell load au_4d_radar node
 $ cd ~/share/ros2_ws
 source install/local_setup.bash
 ros2 component load /ComponentManager au_4d_radar au_4d_radar::device_au_radar_node
 ```
 
-**Install FlatBuffers**:
-=============
-```
+## Install FlatBuffers:
+```bash
 1. Download flatbuf
 export VERSION=v24.3.25
 git clone https://github.com/google/flatbuffers.git flatbuffers_$VERSION
