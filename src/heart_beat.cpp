@@ -52,6 +52,31 @@ Heartbeat::~Heartbeat() {
     stop(); 
 }
 
+void Heartbeat::start() {
+    if (initialize()) {
+        receiverThread = std::thread(&Heartbeat::handleClientMessages, this);
+    }
+}
+
+void Heartbeat::stop() {
+    running = false;
+    if (recv_sockfd >= 0) {
+        close(recv_sockfd);
+        recv_sockfd = -1;
+    }
+
+    if (send_sockfd >= 0) {
+        close(send_sockfd);
+        send_sockfd = -1;
+    }
+
+    if (receiverThread.joinable()) {
+        receiverThread.join();
+    }
+
+    // std::cerr << "Heartbeat::stop" << std::endl;        
+}  
+
 bool Heartbeat::initialize() {
     clientHostname = Util::readHostnameFromYaml("client_hostname");
 
@@ -93,35 +118,6 @@ bool Heartbeat::initialize() {
     }
 
     return true;
-}
-
-void Heartbeat::start() {
-    if (initialize()) {
-        receiverThread = std::thread(&Heartbeat::handleClientMessages, this);
-    }
-}
-
-void Heartbeat::stop() {
-    running = false;
-    if (recv_sockfd >= 0) {
-        close(recv_sockfd);
-        recv_sockfd = -1;
-    }
-
-    if (send_sockfd >= 0) {
-        close(send_sockfd);
-        send_sockfd = -1;
-    }
-
-    if (receiverThread.joinable()) {
-        receiverThread.join();
-    }
-
-    // std::cerr << "Heartbeat::stop" << std::endl;        
-}  
-
-bool Heartbeat::connectionStatus(){
-    return connected;
 }
 
 void Heartbeat::processRequestConnection(const uint8_t* buffer, const std::string& receivedIp, socklen_t len) {
@@ -194,6 +190,8 @@ void Heartbeat::handleClientMessages() {
         } else if (n > BUFFER_SIZE) {
             RCLCPP_ERROR(rclcpp::get_logger("Heartbeat"), "message size exceeds buffer size");                 
             continue;
+        } else {
+            buffer[n] = '\0';
         }
 
         std::string receivedIp = inAddrToString(recv_server_addr.sin_addr.s_addr);
@@ -235,6 +233,10 @@ void Heartbeat::setClientIp(const std::string& newIp) {
 
 std::string Heartbeat::getClientIP() {
     return clientIp;
+}
+
+bool Heartbeat::connectionStatus(){
+    return connected;
 }
 
 }

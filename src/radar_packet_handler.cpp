@@ -109,8 +109,10 @@ void RadarPacketHandler::receiveMessages() {
         } else if (n > BUFFER_SIZE) {
             RCLCPP_ERROR(rclcpp::get_logger("RadarPacketHandler"), "message size exceeds buffer size");                 
             continue;
-        }        
-        buffer[n] = '\0';
+        } else {
+            buffer[n] = '\0';
+        }
+        
 #if (POINT_CLOUD2)
         message_parser_.parseRadarData(buffer, &message_type, radar_cloud_msg, radar_tracks_msg);
         radar_node_->publishRadarPointCloud2(message_type, radar_cloud_msg, radar_tracks_msg);

@@ -27,6 +27,7 @@ void MessageParser::makeRadarPointCloud2Mssg(uint8_t *p_buff, sensor_msgs::msg::
     uint32_t idx = 0;
     tsPacketHeader header = {};
     std::stringstream ss;
+    const double deg2rad = 3.141592 / 180.0;    
 
     idx += 4;
     header.ui32UID = Conversion::littleEndianToUint32(&p_buff[idx]);
@@ -48,7 +49,7 @@ void MessageParser::makeRadarPointCloud2Mssg(uint8_t *p_buff, sensor_msgs::msg::
     header.ui16PCKN = Conversion::littleEndianToUint16(&p_buff[idx]);
     idx += 2;
 
-    if(header.ui32PN > 60){ // 60
+    if(header.ui32PN > 60) { 
         RCLCPP_ERROR(rclcpp::get_logger("point_cloud2_msg"), "Failed to decode RadarPointCloud2Mssg ui32PN: %u", header.ui32PN);               
         return;
     }
@@ -117,9 +118,9 @@ void MessageParser::makeRadarPointCloud2Mssg(uint8_t *p_buff, sensor_msgs::msg::
         idx += 4;
 
         // Convert to Cartesian coordinates
-        float x = range * std::cos(elevation) * std::cos(azimuth);
-        float y = range * std::cos(elevation) * std::sin(azimuth);
-        float z = range * std::sin(elevation);
+        float x = range * std::cos(elevation * deg2rad) * std::cos(azimuth * deg2rad);
+        float y = range * std::cos(elevation * deg2rad) * std::sin(azimuth * deg2rad);
+        float z = range * std::sin(elevation * deg2rad);        
         float intensity = amplitude;
 
         // Copy the data into the PointCloud2 data array
