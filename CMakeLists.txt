@@ -33,7 +33,8 @@ set(node_plugins "")
 
 add_library(device_au_radar_node SHARED
   src/au_4d_radar.cpp
-  src/conversion.cpp
+  src/util/conversion.cpp
+  src/util/util.cpp  
   src/message_parse.cpp
   src/radar_packet_handler.cpp  
   src/heart_beat.cpp)  

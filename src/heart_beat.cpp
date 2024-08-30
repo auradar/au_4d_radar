@@ -14,18 +14,16 @@
 #include <unistd.h>
 #include <fstream>
 #include <ifaddrs.h>
-
 #include <sys/socket.h>
 #include <netdb.h>
 
 #include <sstream>
-#include <yaml-cpp/yaml.h>
-#include <ament_index_cpp/get_package_share_directory.hpp>
 #include "flat/Heartbeat_generated.h"
 #include "flat/RequestConnection_generated.h"
 #include "flat/ResponseConnection_generated.h"
 #include "util/HexDump.hpp"
 #include "util/conversion.hpp"
+#include "util/util.hpp"
 
 #include "au_4d_radar.hpp"
 // #include "heart_beat.hpp"
@@ -55,7 +53,7 @@ Heartbeat::~Heartbeat() {
 }
 
 bool Heartbeat::initialize() {
-    clientHostname = readFromYaml("client_hostname");
+    clientHostname = Util::readHostnameFromYaml("client_hostname");
 
     recv_sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     if (recv_sockfd < 0) {
@@ -189,9 +187,9 @@ void Heartbeat::handleClientMessages() {
 
     while (running) {
         socklen_t len = sizeof(recv_server_addr);
-        int       n   = recvfrom(recv_sockfd, buffer, sizeof(buffer), 0, (struct sockaddr *)&recv_server_addr, &len);
+        int n = recvfrom(recv_sockfd, buffer, sizeof(buffer), 0, (struct sockaddr *)&recv_server_addr, &len);
         if (n < 0) {
-            RCLCPP_ERROR(rclcpp::get_logger("Heartbeat"), "Failed recvfrom n < 0");              
+            RCLCPP_ERROR(rclcpp::get_logger("Heartbeat"), "recvfrom failed");                                         
             continue;
         } else if (n > BUFFER_SIZE) {
             RCLCPP_ERROR(rclcpp::get_logger("Heartbeat"), "message size exceeds buffer size");                 
@@ -213,23 +211,6 @@ void Heartbeat::handleClientMessages() {
                 // std::cout << HexDump(buffer, n) << std::endl;
                 break;
         }
-    }
-}
-
-std::string Heartbeat::readFromYaml(const std::string& key) {
-    try {
-        std::string yaml_file_path = ament_index_cpp::get_package_share_directory("au_4d_radar") + "/config/system_info.yaml";        
-        YAML::Node config = YAML::LoadFile(yaml_file_path); 
-
-        if (config[key]) {
-            return config[key].as<std::string>();
-        } else {
-            RCLCPP_ERROR(rclcpp::get_logger("Heartbeat"), "not found in system_info.yaml key: %s", key.c_str());             
-            return "";
-        }
-    } catch (const YAML::Exception& e) {
-        RCLCPP_ERROR(rclcpp::get_logger("Heartbeat"), "Error reading YAML file: %s", e.what());          
-        return "";
     }
 }
 

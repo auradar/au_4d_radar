@@ -53,9 +53,6 @@ namespace au_4d_radar
         MessageParser()  = default;
         ~MessageParser() = default;  
 
-        void makeRadarPointCloud2Mssg(uint8_t *p_buff, sensor_msgs::msg::PointCloud2& cloud_msg);       
-        void makeRadarScanMssg(uint8_t *p_buff, radar_msgs::msg::RadarScan& radar_scan_msg);
-        void makeRadarTracksMssg(uint8_t *p_buff, radar_msgs::msg::RadarTracks& radar_tracks_msg);
         void parseRadarData(uint8_t *p_buff, uint32_t *message_type, 
             #if (POINT_CLOUD2)
             sensor_msgs::msg::PointCloud2& radar_cloud_msg,
@@ -65,6 +62,11 @@ namespace au_4d_radar
             radar_msgs::msg::RadarTracks& radar_tracks_msg);
 
     private:
+        std::string readFrameIdFromYaml(const std::string& key);    
+        void makeRadarPointCloud2Mssg(uint8_t *p_buff, sensor_msgs::msg::PointCloud2& cloud_msg);       
+        void makeRadarScanMssg(uint8_t *p_buff, radar_msgs::msg::RadarScan& radar_scan_msg);
+        void makeRadarTracksMssg(uint8_t *p_buff, radar_msgs::msg::RadarTracks& radar_tracks_msg);
+        
         uint32_t sequence_id_;
         std::string frame_id_;
         uint32_t stamp_tv_sec_;

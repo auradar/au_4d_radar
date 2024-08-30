@@ -12,13 +12,13 @@
 
 #include <iostream>
 #include "rclcpp/rclcpp.hpp"
-#include "uuid_helper.hpp"
-#include "util/conversion.hpp"
-
 #include <vector>
 #include <cmath>
 #include <sensor_msgs/point_cloud2_iterator.hpp>
 #include "au_4d_radar.hpp"
+#include "uuid_helper.hpp"
+#include "util/conversion.hpp"
+#include "util/util.hpp"
 
 namespace au_4d_radar
 {
@@ -49,7 +49,7 @@ void MessageParser::makeRadarPointCloud2Mssg(uint8_t *p_buff, sensor_msgs::msg::
     idx += 2;
 
     if(header.ui32PN > 60){ // 60
-        RCLCPP_ERROR(rclcpp::get_logger("point_cloud2_msg"), "Failed to decode parseRadarData ui32PN: %u", header.ui32PN);               
+        RCLCPP_ERROR(rclcpp::get_logger("point_cloud2_msg"), "Failed to decode RadarPointCloud2Mssg ui32PN: %u", header.ui32PN);               
         return;
     }
 
@@ -107,7 +107,7 @@ void MessageParser::makeRadarPointCloud2Mssg(uint8_t *p_buff, sensor_msgs::msg::
     for (uint32_t i = 0; i < header.ui32PN; i++) {
         float range = Conversion::convertToFloat(&p_buff[idx]);
         idx += 4;
-          // Skip doppler_velocity (4 bytes)
+        // Skip doppler_velocity (4 bytes)
         idx += 4;
         float azimuth = Conversion::convertToFloat(&p_buff[idx]);
         idx += 4;
@@ -157,15 +157,18 @@ void MessageParser::makeRadarScanMssg(uint8_t *p_buff, radar_msgs::msg::RadarSca
     header.ui16PCKN = Conversion::littleEndianToUint16(&p_buff[idx]);
     idx += 2;
 
-    if(header.ui32PN > 60){ // 60
-        RCLCPP_ERROR(rclcpp::get_logger("radar_scan_msg"), "Failed to decode parseRadarData ui32PN: %u", header.ui32PN);               
+    if(header.ui32PN > 60){ 
+        RCLCPP_ERROR(rclcpp::get_logger("radar_scan_msg"), "Failed to decode RadarScanMssg ui32PN: %u", header.ui32PN);               
         return;
     }
 
    // https://github.com/ros2/common_interfaces/blob/rolling/std_msgs/msg/Header.msg
     //sequence_id_ = header.ui32FN; 
     ss << std::hex << header.ui32UID;
-    frame_id_ = ss.str();
+    frame_id_ = Util::readFrameIdFromYaml(ss.str());
+    if(frame_id_.empty())
+        frame_id_ = ss.str();
+
     stamp_tv_sec_ = header.ui32TS;
     stamp_tv_nsec_ = header.ui32TN;
 

@@ -1,1 +1,5 @@
 client_hostname: auradar-eeeeeeee
+radars:
+  27c06058: FRONT RIGHT
+  db089dfa: REAR LEFT
+  

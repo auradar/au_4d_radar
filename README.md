@@ -9,7 +9,7 @@ This program has been tested on ubuntu 22.04 ROS2 humble.
 mkdir -p ~/share/ros2_ws/src
 ```
 
-**Download AuRadar4D ROS2 Source code**:
+**Download AU 4D Radar ROS2 Source code**:
 ```
 export VERSION=v2.0
 cd ~/share/ros2_ws/src
@@ -30,6 +30,21 @@ $ git clone https://github.com/ros-perception/radar_msgs.git
 ```
 $ cd ~/share/ros2_ws/src
 $ git clone -b v2.0 https://github.com/auradar/mon_msgs.git
+```
+
+**Frame ID Naming convention**:
+```
+The system_info.yaml file is structured as follows.
+system_info.yaml
+--------------------------
+radars:
+  frame_id: identifier  
+
+If you want to display an identifier instead of frame_id, enter frame_id: identifier in the system_info.yaml file.
+example)
+radars:
+  27c06058: FRONT RIGHT
+  db089dfa: REAR LEFT
 ```
 
 **Compile & Run**:
