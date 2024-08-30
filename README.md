@@ -40,7 +40,7 @@ $ git clone -b v2.0 https://github.com/auradar/mon_msgs.git
 radars:
   frame_id: identifier  
 ```
->If you want to display an identifier instead of frame_id, enter frame_id: >identifier in the `system_info.yaml` file.
+>If you want to display an identifier instead of frame_id, enter frame_id: identifier in the `system_info.yaml` file.
 ```yaml
 radars:
   27c06058: FRONT RIGHT
