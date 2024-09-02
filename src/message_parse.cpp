@@ -109,11 +109,11 @@ void MessageParser::makeRadarPointCloud2Mssg(uint8_t *p_buff, sensor_msgs::msg::
 
     // Populate the point cloud data
     for (uint32_t i = 0; i < header.ui32PN; i++) {
-        // uint32_t index = Conversion::littleEndianToUint32(&p_buff[idx]);
+         uint32_t index = Conversion::littleEndianToUint32(&p_buff[idx]);
         idx += 4;        
         float range = Conversion::convertToFloat(&p_buff[idx]);
         idx += 4;
-        // float velocity = Conversion::convertToFloat(&p_buff[idx]);          
+        float velocity = Conversion::convertToFloat(&p_buff[idx]);          
         idx += 4;
         float azimuth = Conversion::convertToFloat(&p_buff[idx]);
         idx += 4;
@@ -122,8 +122,8 @@ void MessageParser::makeRadarPointCloud2Mssg(uint8_t *p_buff, sensor_msgs::msg::
         float amplitude = Conversion::convertToFloat(&p_buff[idx]);
         idx += 4;
 
-        // RCLCPP_INFO(rclcpp::get_logger("point_cloud2_msg"), "index %u range %f velocity %f azimuth %f elevation %f amplitude %f", 
-        //                                                 index, range, velocity, azimuth, elevation, amplitude); 
+        RCLCPP_INFO(rclcpp::get_logger("point_cloud2_msg"), "index %u range %f velocity %f azimuth %f elevation %f amplitude %f", 
+                                                        index, range, velocity, azimuth, elevation, amplitude); 
 
         // Convert to Cartesian coordinates
         float x = range * std::cos(elevation * deg2rad) * std::cos(azimuth * deg2rad);
