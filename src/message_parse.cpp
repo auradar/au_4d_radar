@@ -82,8 +82,8 @@ void MessageParser::makeRadarPointCloud2Msg(uint8_t *p_buff, sensor_msgs::msg::P
     stamp_tv_sec_ = header.ui32TS;
     stamp_tv_nsec_ = header.ui32TN;
 
-    RCLCPP_INFO(rclcpp::get_logger("point_cloud2"), "frame_id %s FN %u TPN %u PN %u TPCKN %u PCKN %u", 
-                                                    frame_id_.c_str(), header.ui32FN, header.ui32TPN, header.ui32PN, header.ui16TPCKN, header.ui16PCKN); 
+    // RCLCPP_INFO(rclcpp::get_logger("point_cloud2"), "frame_id %s FN %u TPN %u PN %u TPCKN %u PCKN %u", 
+    //                                                 frame_id_.c_str(), header.ui32FN, header.ui32TPN, header.ui32PN, header.ui16TPCKN, header.ui16PCKN); 
 
     // https://github.com/ros2/common_interfaces/blob/rolling/sensor_msgs/msg/PointCloud2.msg
     cloud_msg.header.frame_id = frame_id_;
@@ -199,8 +199,8 @@ void MessageParser::makeRadarScanMsg(uint8_t *p_buff, radar_msgs::msg::RadarScan
     stamp_tv_sec_ = header.ui32TS;
     stamp_tv_nsec_ = header.ui32TN;
 
-    RCLCPP_INFO(rclcpp::get_logger("radar_scan"), "frame_id %s FN %u TPN %u PN %u TPCKN %u PCKN %u", 
-                                                    frame_id_.c_str(), header.ui32FN, header.ui32TPN, header.ui32PN, header.ui16TPCKN, header.ui16PCKN); 
+    // RCLCPP_INFO(rclcpp::get_logger("radar_scan"), "frame_id %s FN %u TPN %u PN %u TPCKN %u PCKN %u", 
+    //                                                 frame_id_.c_str(), header.ui32FN, header.ui32TPN, header.ui32PN, header.ui16TPCKN, header.ui16PCKN); 
 
     radar_scan_msg.header.frame_id = frame_id_;
     radar_scan_msg.header.stamp.sec = stamp_tv_sec_;
