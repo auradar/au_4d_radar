@@ -31,13 +31,17 @@ device_au_radar_node::device_au_radar_node(const rclcpp::NodeOptions & options)
     //     PUB_TIME, 
     //     std::bind(&device_au_radar_node::publish, this));
 
+    rclcpp::QoS qos = rclcpp::SensorDataQoS();
+    qos.reliability(RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT);
+    pub_radar_point_cloud2 = this->create_publisher<sensor_msgs::msg::PointCloud2>(
+                    "/device/au/radar/point_cloud2", qos);
+
+    // pub_radar_point_cloud2 = this->create_publisher<sensor_msgs::msg::PointCloud2>(
+    //                 "/device/au/radar/point_cloud2", rclcpp::SensorDataQoS());                    
+
     pub_radar_scan = this->create_publisher<radar_msgs::msg::RadarScan>(
                     "/device/au/radar/scan",
                     rclcpp::SensorDataQoS());
-
-    pub_radar_point_cloud2 = this->create_publisher<sensor_msgs::msg::PointCloud2>(
-                    "/device/au/radar/point_cloud2",
-                    rclcpp::SensorDataQoS());    
 
     pub_radar_track = this->create_publisher<radar_msgs::msg::RadarTracks>(
                     "/device/au/radar/track",

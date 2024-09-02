@@ -46,7 +46,6 @@ namespace au_4d_radar
         void stopHeartbeatHandler(void);
         static void interruptHandler(int sig);
         void publish();
-        void monitor();
 
         rclcpp::Publisher<radar_msgs::msg::RadarScan>::SharedPtr pub_radar_scan;
         rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr pub_radar_point_cloud2;        

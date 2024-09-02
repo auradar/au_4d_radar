@@ -2,8 +2,9 @@ AU 4D Radar
 ========
 
 ## Introduction
->au_4d_radar is a collection of ROS2 packages supporting 4D Radar Sensors.
->This program has been tested on ubuntu 22.04 ROS2 humble.
+au_4d_radar is a collection of ROS2 packages supporting 4D Radar Sensors.
+This program has been tested on ubuntu 22.04 ROS2 humble.
+Supports automatic connection and communication functions without having to set the IP of each component in a local network environment.
 
 ## How to build the au_4d_radar 
 
@@ -14,8 +15,8 @@ mkdir -p ~/share/ros2_ws/src
 
 **Download AU 4D Radar ROS2 Source code**:
 ```bash
-export VERSION=v2.0
-cd ~/share/ros2_ws/src
+$ export VERSION=v2.0
+$ cd ~/share/ros2_ws/src
 $ git clone https://github.com/auradar/au_4d_radar.git
 $ cd au_4d_radar
 $ git checkout $VERSION
@@ -40,7 +41,7 @@ $ git clone -b v2.0 https://github.com/auradar/mon_msgs.git
 radars:
   frame_id: identifier  
 ```
->If you want to display an identifier instead of frame_id, enter frame_id: >identifier in the `system_info.yaml` file.
+>If you want to display an identifier instead of frame_id, enter frame_id: identifier in the `system_info.yaml` file.
 ```yaml
 radars:
   27c06058: FRONT RIGHT
