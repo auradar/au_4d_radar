@@ -144,7 +144,8 @@ void Heartbeat::processRequestConnection(const uint8_t* buffer, const std::strin
         }        
 
         sendto(send_sockfd, buff.data(), buff_size, 0, (const struct sockaddr *)&send_server_addr, len);
-        RCLCPP_INFO(rclcpp::get_logger("Heartbeat"), "Response for request connection sent to:  %s", receivedIp.c_str());         
+        RCLCPP_INFO(rclcpp::get_logger("Heartbeat"), "Response for request connection sent to:  %s", receivedIp.c_str());      
+        radar_node_->radar_handler_.sendMessages("SS", receivedIp.c_str());    
     } else {
         RCLCPP_INFO(rclcpp::get_logger("Heartbeat"), "processRequestConnection() Hostname does not match: %s", receivedHostname.c_str());         
     }

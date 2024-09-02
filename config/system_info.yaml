@@ -1,5 +1,8 @@
 client_hostname: auradar-eeeeeeee
 POINT_CLOUD2: true
 radars:
-  27c06058: FRONT RIGHT
-  db089dfa: REAR LEFT
+  odd98aa5: RADAR FRONT
+  2812b707: RADAR FRONT RIGHT
+  2d12af50: RADAR REAR RIGHT
+  564d6b80: RADAR REAR LEFT
+  2f7e83f9: RADAR FRONT LEFT
