@@ -6,6 +6,7 @@ class Util {
 
 public:
     static std::string readHostnameFromYaml(const std::string& key);
+    static bool readPointCloud2Setting(const std::string& key);    
     static std::string readFrameIdFromYaml(const std::string& key);
 
 };

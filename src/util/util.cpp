@@ -32,6 +32,24 @@ std::string Util::readHostnameFromYaml(const std::string& key) {
     }
 }
 
+
+bool Util::readPointCloud2Setting(const std::string& key) {
+    try {
+        std::string yaml_file_path = ament_index_cpp::get_package_share_directory("au_4d_radar") + "/config/system_info.yaml";        
+        YAML::Node config = YAML::LoadFile(yaml_file_path); 
+
+        if (config[key]) {
+            return config[key].as<bool>();
+        } else {
+            RCLCPP_ERROR(rclcpp::get_logger("readPointCloud2Setting"), "not found in system_info.yaml key: %s", key.c_str());    
+            return false; 
+        }
+    } catch (const YAML::Exception& e) {
+        RCLCPP_ERROR(rclcpp::get_logger("readPointCloud2Setting"), "Error reading YAML file: %s", e.what());  
+        return false; 
+    }
+}
+
 std::string Util::readFrameIdFromYaml(const std::string& key) {
     try {
         std::string yaml_file_path = ament_index_cpp::get_package_share_directory("au_4d_radar") + "/config/system_info.yaml";        

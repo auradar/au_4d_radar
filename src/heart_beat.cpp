@@ -45,7 +45,7 @@ namespace au_4d_radar
 std::string Heartbeat::clientIp = DEFAULT_IP;
 
 Heartbeat::Heartbeat(device_au_radar_node* node) 
-    : send_sockfd(-1), running(true), connected(false), radar_node_(node) {}
+    : recv_sockfd(-1), send_sockfd(-1), running(true), connected(false), radar_node_(node) {}
 
 Heartbeat::~Heartbeat() { 
     // std::cerr << "Heartbeat::~Heartbeat()" << std::endl;         

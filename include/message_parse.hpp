@@ -23,55 +23,35 @@
 #include <radar_msgs/msg/radar_tracks.hpp>
 #include <sensor_msgs/msg/point_cloud2.hpp>
 
-#include "config.hpp"
-
 
 namespace au_4d_radar
 {
 
-#define HEADER_SCAN 			0x5343414e 
-#define HEADER_TRACK 			0x54524143
-#define HEADER_MON 				0x4d4f4e49
+class device_au_radar_node;
+class MessageParser
+{
+public:
+    MessageParser(device_au_radar_node* node); 
+    MessageParser()  = default;          
+    ~MessageParser() = default;  
 
-    struct tsPacketHeader
-    {
-        uint32_t ui32SB;
-        uint32_t ui32UID;             
-        uint32_t ui32TS;
-        uint32_t ui32TN;
-        uint32_t ui32FN;
-        float    f32CT;
-        uint32_t ui32TPN;
-        uint32_t ui32PN;
-        uint16_t ui16TPCKN;
-        uint16_t ui16PCKN;
-    };
+    void parsePointCloud2Msg(uint8_t *p_buff, sensor_msgs::msg::PointCloud2& radar_cloud_msg);
+    void parseRadarScanMsg(uint8_t *p_buff, radar_msgs::msg::RadarScan& radar_scan_msg);
+    void parseRadarTrackMsg(uint8_t *p_buff, radar_msgs::msg::RadarTracks& radar_tracks_msg);
 
-    class MessageParser
-    {
-    public:
-        MessageParser()  = default;
-        ~MessageParser() = default;  
+private:
+    void makeRadarPointCloud2Msg(uint8_t *p_buff, sensor_msgs::msg::PointCloud2& cloud_msg);       
+    void makeRadarScanMsg(uint8_t *p_buff, radar_msgs::msg::RadarScan& radar_scan_msg);
+    void makeRadarTracksMsg(uint8_t *p_buff, radar_msgs::msg::RadarTracks& radar_tracks_msg);
+    
+    uint32_t sequence_id_;
+    std::string frame_id_;
+    uint32_t stamp_tv_sec_;
+    uint32_t stamp_tv_nsec_;
 
-        void parseRadarData(uint8_t *p_buff, uint32_t *message_type, 
-            #if (POINT_CLOUD2)
-            sensor_msgs::msg::PointCloud2& radar_cloud_msg,
-            #else
-            radar_msgs::msg::RadarScan& radar_scan_msg,
-            #endif
-            radar_msgs::msg::RadarTracks& radar_tracks_msg);
+    device_au_radar_node* radar_node_;        
+};
 
-    private:
-        std::string readFrameIdFromYaml(const std::string& key);    
-        void makeRadarPointCloud2Mssg(uint8_t *p_buff, sensor_msgs::msg::PointCloud2& cloud_msg);       
-        void makeRadarScanMssg(uint8_t *p_buff, radar_msgs::msg::RadarScan& radar_scan_msg);
-        void makeRadarTracksMssg(uint8_t *p_buff, radar_msgs::msg::RadarTracks& radar_tracks_msg);
-        
-        uint32_t sequence_id_;
-        std::string frame_id_;
-        uint32_t stamp_tv_sec_;
-        uint32_t stamp_tv_nsec_;
-    };
 }
 
 #endif // MESSAGE_PARSE_HPP

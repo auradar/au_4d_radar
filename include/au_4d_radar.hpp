@@ -15,9 +15,9 @@
 #include "mon_msgs/msg/radar_health.hpp"
 #include <sensor_msgs/msg/point_cloud2.hpp>
 
+#include "heart_beat.hpp" 
 #include "radar_packet_handler.hpp"  
 #include "message_parse.hpp"
-#include "heart_beat.hpp" 
 
 
 namespace au_4d_radar
@@ -29,21 +29,19 @@ namespace au_4d_radar
     public:
         explicit device_au_radar_node(const rclcpp::NodeOptions& options);
         void publishHeartbeat(mon_msgs::msg::RadarHealth& radar_health_msg);
-        void publishRadarData(uint32_t message_type, radar_msgs::msg::RadarScan &radar_scan_msg, radar_msgs::msg::RadarTracks &radar_tracks_msg);
-        void publishRadarPointCloud2(uint32_t message_type, sensor_msgs::msg::PointCloud2& radar_cloud_msg, radar_msgs::msg::RadarTracks& radar_tracks_msg);
+        void publishRadarPointCloud2(sensor_msgs::msg::PointCloud2& radar_cloud_msg);
+        void publishRadarScanMsg(radar_msgs::msg::RadarScan &radar_scan_msg);
+        void publishRadarTrackMsg(radar_msgs::msg::RadarTracks &radar_tracks_msg);
 
         Heartbeat heart_beat_; 
         RadarPacketHandler radar_handler_;    
-        
+        MessageParser message_parser_; 
+
     private:
         template<typename Param>
         void get_param(rclcpp::Node::SharedPtr nh, const std::string& name, Param& variable);
 
         int initInterruptHandler(void);
-        int initRadarPacketHandler(void);
-        int initHeartbeatHandler(void);
-        void stopRadarPacketHandler(void);
-        void stopHeartbeatHandler(void);
         static void interruptHandler(int sig);
         void publish();
 
@@ -60,9 +58,7 @@ namespace au_4d_radar
         rclcpp::TimerBase::SharedPtr timer_mon_;
 
         static uint32_t temp_cnt;
-
-        MessageParser message_parser_; 
-        
+       
         static device_au_radar_node* instance_;
     };
 }

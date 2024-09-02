@@ -47,8 +47,10 @@ namespace au_4d_radar
         struct sockaddr_in client_addr_;
         std::string client_ip;
         std::atomic<bool> radar_running;
+        std::atomic<bool> point_cloud2_setting;
         std::thread  thread_;
         MessageParser message_parser_;
+
         device_au_radar_node* radar_node_;
     };
 }

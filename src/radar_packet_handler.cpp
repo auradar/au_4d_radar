@@ -17,11 +17,17 @@
 #include <thread>
 
 #include "au_4d_radar.hpp"
+#include "util/conversion.hpp"
+#include "util/util.hpp"
 
 // #include "radar_packet_handler.hpp"
 
 #define TARGET_PORT 7778
 #define BUFFER_SIZE 1500
+
+#define HEADER_SCAN 			0x5343414e 
+#define HEADER_TRACK 			0x54524143
+#define HEADER_MON 				0x4d4f4e49
 
 namespace au_4d_radar
 {
@@ -55,7 +61,7 @@ void RadarPacketHandler::stop() {
 }
 
 bool RadarPacketHandler::initialize() {
-    client_ip = DEFAULT_IP; //radar_node_->heart_beat_.getClientIP();
+    point_cloud2_setting = Util::readPointCloud2Setting("POINT_CLOUD2");
 
     rd_sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     if (rd_sockfd < 0) {
@@ -84,13 +90,10 @@ bool RadarPacketHandler::initialize() {
 }
 
 void RadarPacketHandler::receiveMessages() {
-#if (POINT_CLOUD2)    
+
     sensor_msgs::msg::PointCloud2 radar_cloud_msg;    
-#else    
-    radar_msgs::msg::RadarScan radar_scan_msg;
-#endif    
+    radar_msgs::msg::RadarScan radar_scan_msg;    
     radar_msgs::msg::RadarTracks radar_tracks_msg;
-    uint32_t message_type;
     uint8_t buffer[BUFFER_SIZE];
     socklen_t addr_len = sizeof(client_addr_);
 
@@ -113,13 +116,24 @@ void RadarPacketHandler::receiveMessages() {
             buffer[n] = '\0';
         }
         
-#if (POINT_CLOUD2)
-        message_parser_.parseRadarData(buffer, &message_type, radar_cloud_msg, radar_tracks_msg);
-        radar_node_->publishRadarPointCloud2(message_type, radar_cloud_msg, radar_tracks_msg);
-#else
-        message_parser_.parseRadarData(buffer, &message_type, radar_scan_msg, radar_tracks_msg);
-        radar_node_->publishRadarData(message_type, radar_scan_msg, radar_tracks_msg);
-#endif        
+        uint32_t msg_type = Conversion::littleEndianToUint32(buffer);
+        uint16_t offset = sizeof(msg_type);
+        if(msg_type == HEADER_SCAN) { 
+            message_parser_.parseRadarScanMsg(&buffer[offset], radar_scan_msg);
+            radar_node_->publishRadarScanMsg(radar_scan_msg);    
+            if(point_cloud2_setting) {                                  
+                message_parser_.parsePointCloud2Msg(&buffer[offset], radar_cloud_msg);
+                radar_node_->publishRadarPointCloud2(radar_cloud_msg);    
+            }         
+        } else if(msg_type == HEADER_TRACK) {
+            message_parser_.parseRadarTrackMsg(&buffer[offset], radar_tracks_msg);
+            radar_node_->publishRadarTrackMsg(radar_tracks_msg);           
+        } else if(msg_type == HEADER_MON) {
+            RCLCPP_INFO(rclcpp::get_logger("RadarPacketHandler"), "HEADER_MON message");         
+        }  else {
+            RCLCPP_INFO(rclcpp::get_logger("RadarPacketHandler"), "Failed to decode msg_type: %08x", msg_type);           
+        }
+     
     }
 }
 
