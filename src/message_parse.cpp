@@ -64,7 +64,7 @@ void MessageParser::makeRadarPointCloud2Mssg(uint8_t *p_buff, sensor_msgs::msg::
     stamp_tv_sec_ = header.ui32TS;
     stamp_tv_nsec_ = header.ui32TN;
 
-    RCLCPP_INFO(rclcpp::get_logger("point_cloud2_msg"), "UID %u FN %u TPN %u PN %u TPCKN %u PCKN %u", 
+    RCLCPP_INFO(rclcpp::get_logger("point_cloud2"), "UID %08x FN %u TPN %u PN %u TPCKN %u PCKN %u", 
                                                     header.ui32UID, header.ui32FN, header.ui32TPN, header.ui32PN, header.ui16TPCKN, header.ui16PCKN); 
 
     // https://github.com/ros2/common_interfaces/blob/rolling/sensor_msgs/msg/PointCloud2.msg
@@ -109,7 +109,7 @@ void MessageParser::makeRadarPointCloud2Mssg(uint8_t *p_buff, sensor_msgs::msg::
 
     // Populate the point cloud data
     for (uint32_t i = 0; i < header.ui32PN; i++) {
-         uint32_t index = Conversion::littleEndianToUint32(&p_buff[idx]);
+        uint32_t index = Conversion::littleEndianToUint32(&p_buff[idx]);
         idx += 4;        
         float range = Conversion::convertToFloat(&p_buff[idx]);
         idx += 4;
@@ -122,8 +122,8 @@ void MessageParser::makeRadarPointCloud2Mssg(uint8_t *p_buff, sensor_msgs::msg::
         float amplitude = Conversion::convertToFloat(&p_buff[idx]);
         idx += 4;
 
-        RCLCPP_INFO(rclcpp::get_logger("point_cloud2_msg"), "index %u range %f velocity %f azimuth %f elevation %f amplitude %f", 
-                                                        index, range, velocity, azimuth, elevation, amplitude); 
+        // RCLCPP_INFO(rclcpp::get_logger("point_cloud2"), "index %u range %f velocity %f azimuth %f elevation %f amplitude %f", 
+        //                                                 index, range, velocity, azimuth, elevation, amplitude); 
 
         // Convert to Cartesian coordinates
         float x = range * std::cos(elevation * deg2rad) * std::cos(azimuth * deg2rad);
@@ -167,7 +167,7 @@ void MessageParser::makeRadarScanMssg(uint8_t *p_buff, radar_msgs::msg::RadarSca
     idx += 2;
 
     if(header.ui32PN > 60){ 
-        RCLCPP_ERROR(rclcpp::get_logger("radar_scan_msg"), "Failed to decode RadarScanMssg ui32PN: %u", header.ui32PN);               
+        RCLCPP_ERROR(rclcpp::get_logger("radar_scan"), "Failed to decode RadarScanMssg ui32PN: %u", header.ui32PN);               
         return;
     }
 
@@ -181,8 +181,8 @@ void MessageParser::makeRadarScanMssg(uint8_t *p_buff, radar_msgs::msg::RadarSca
     stamp_tv_sec_ = header.ui32TS;
     stamp_tv_nsec_ = header.ui32TN;
 
-    RCLCPP_INFO(rclcpp::get_logger("radar_scan_msg"), "frame_id: %s ui32FN: %u ui32TPN: %u ui32PN: %u", 
-                                                    frame_id_.c_str(), header.ui32FN, header.ui32TPN, header.ui32PN); 
+    RCLCPP_INFO(rclcpp::get_logger("radar_scan"), "UID %08x FN %u TPN %u PN %u TPCKN %u PCKN %u", 
+                                                    header.ui32UID, header.ui32FN, header.ui32TPN, header.ui32PN, header.ui16TPCKN, header.ui16PCKN); 
 
     radar_scan_msg.header.frame_id = frame_id_;
     radar_scan_msg.header.stamp.sec = stamp_tv_sec_;
@@ -192,7 +192,7 @@ void MessageParser::makeRadarScanMssg(uint8_t *p_buff, radar_msgs::msg::RadarSca
     for(uint32_t i = 0; i < header.ui32PN; i++)
     {
         radar_msgs::msg::RadarReturn return_msg;
-        // float index = Conversion::convertToFloat(&p_buff[idx]);
+        uint32_t index = Conversion::littleEndianToUint32(&p_buff[idx]);
         idx += 4;           
         return_msg.range = Conversion::convertToFloat(&p_buff[idx]);
         idx += 4;
@@ -204,6 +204,9 @@ void MessageParser::makeRadarScanMssg(uint8_t *p_buff, radar_msgs::msg::RadarSca
         idx += 4;
         return_msg.amplitude = Conversion::convertToFloat(&p_buff[idx]);
         idx += 4;
+
+        // RCLCPP_INFO(rclcpp::get_logger("RadarScan"), "index %u range %f velocity %f azimuth %f elevation %f amplitude %f", 
+        //                                                 index, return_msg.range, return_msg.doppler_velocity, return_msg.azimuth, return_msg.elevation, return_msg.amplitude); 
 
         radar_scan_msg.returns.push_back(return_msg);
     }    
