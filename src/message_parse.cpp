@@ -18,7 +18,7 @@
 
 #include "util/uuid_helper.hpp"
 #include "util/conversion.hpp"
-#include "util/util.hpp"
+#include "util/yamlParser.hpp"
 #include "au_4d_radar.hpp"
 
 
@@ -75,7 +75,7 @@ void MessageParser::makeRadarPointCloud2Msg(uint8_t *p_buff, sensor_msgs::msg::P
     // https://github.com/ros2/common_interfaces/blob/rolling/std_msgs/msg/Header.msg
     //sequence_id_ = header.ui32FN; 
     ss << std::hex << header.ui32UID;
-    frame_id_ = Util::readFrameIdFromYaml(ss.str());
+    frame_id_ = YamlParser::readFrameId(ss.str());
     if(frame_id_.empty())
         frame_id_ = ss.str();
 
@@ -192,7 +192,7 @@ void MessageParser::makeRadarScanMsg(uint8_t *p_buff, radar_msgs::msg::RadarScan
    // https://github.com/ros2/common_interfaces/blob/rolling/std_msgs/msg/Header.msg
     //sequence_id_ = header.ui32FN; 
     ss << std::hex << header.ui32UID;
-    frame_id_ = Util::readFrameIdFromYaml(ss.str());
+    frame_id_ = YamlParser::readFrameId(ss.str());
     if(frame_id_.empty())
         frame_id_ = ss.str();
 

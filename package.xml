@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="3">
   <name>au_4d_radar</name>
-  <version>0.0.2</version>
+  <version>1.0.0</version>
   <description>AU 4D radar node</description>
   <maintainer email="kisoo.kim@au-sensor.com">kisoo.kim</maintainer>
 

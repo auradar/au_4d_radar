@@ -18,7 +18,7 @@
 
 #include "au_4d_radar.hpp"
 #include "util/conversion.hpp"
-#include "util/util.hpp"
+#include "util/yamlParser.hpp"
 
 // #include "radar_packet_handler.hpp"
 
@@ -61,7 +61,7 @@ void RadarPacketHandler::stop() {
 }
 
 bool RadarPacketHandler::initialize() {
-    point_cloud2_setting = Util::readPointCloud2Setting("POINT_CLOUD2");
+    point_cloud2_setting = YamlParser::readPointCloud2Setting("POINT_CLOUD2");
 
     rd_sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     if (rd_sockfd < 0) {

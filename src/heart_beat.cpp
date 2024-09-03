@@ -23,7 +23,7 @@
 #include "flat/ResponseConnection_generated.h"
 #include "util/HexDump.hpp"
 #include "util/conversion.hpp"
-#include "util/util.hpp"
+#include "util/yamlParser.hpp"
 
 #include "au_4d_radar.hpp"
 // #include "heart_beat.hpp"
@@ -78,7 +78,7 @@ void Heartbeat::stop() {
 }  
 
 bool Heartbeat::initialize() {
-    clientHostname = Util::readHostnameFromYaml("client_hostname");
+    clientHostname = YamlParser::readHostname("client_hostname");
 
     recv_sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     if (recv_sockfd < 0) {
