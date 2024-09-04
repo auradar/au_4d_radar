@@ -61,15 +61,15 @@ std::string YamlParser::readFrameId(const std::string& key) {
             if (radars[key]) {
                 return radars[key].as<std::string>();
             } else {
-                RCLCPP_ERROR(rclcpp::get_logger("readFrameIdFromYaml"), "frame_id not found in 'radars' section: %s", key.c_str());
+                //RCLCPP_ERROR(rclcpp::get_logger("readFrameId"), "frame_id not found in 'radars' section: %s", key.c_str());
                 return "";
             }
         } else {
-            RCLCPP_ERROR(rclcpp::get_logger("readFrameIdFromYaml"), "'radars' section not found in system_info.yaml");
+            RCLCPP_ERROR(rclcpp::get_logger("readFrameId"), "'radars' section not found in system_info.yaml");
             return "";
         }
     } catch (const YAML::Exception& e) {
-        RCLCPP_ERROR(rclcpp::get_logger("readFrameIdFromYaml"), "Error reading YAML file: %s", e.what());          
+        RCLCPP_ERROR(rclcpp::get_logger("readFrameId"), "Error reading YAML file: %s", e.what());          
         return "";
     }
 }

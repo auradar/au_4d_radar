@@ -199,9 +199,9 @@ void MessageParser::makeRadarScanMsg(uint8_t *p_buff, radar_msgs::msg::RadarScan
     stamp_tv_sec_ = header.ui32TS;
     stamp_tv_nsec_ = header.ui32TN;
 
-    //std::cout << "frame_id "<< std::hex << header.ui32UID << std::endl;
-    // RCLCPP_INFO(rclcpp::get_logger("radar_scan"), "frame_id %08x FN %u TPN %u PN %u TPCKN %u PCKN %u", 
-    //                                                 header.ui32UID, header.ui32FN, header.ui32TPN, header.ui32PN, header.ui16TPCKN, header.ui16PCKN); 
+    // std::cout << "frame_id "<< std::hex << header.ui32UID << std::endl;
+    RCLCPP_INFO(rclcpp::get_logger("radar_scan"), "frame_id %08x FN %u PN %u PCKN %u", 
+                                                header.ui32UID, header.ui32FN, header.ui32PN,  header.ui16PCKN); 
 
     radar_scan_msg.header.frame_id = frame_id_;
     radar_scan_msg.header.stamp.sec = stamp_tv_sec_;

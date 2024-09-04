@@ -173,11 +173,11 @@ void Heartbeat::processHeartbeatMessage(const uint8_t* buffer, const std::string
             radar_health_msg.status = Heartbeat->status();
             radar_health_msg.tv_sec = Heartbeat->timestamp();
 
-            RCLCPP_INFO(rclcpp::get_logger("Heartbeat"), "client_hostname : %s status: %u tv_sec: %u", 
-                        radar_health_msg.client_hostname.c_str(), radar_health_msg.status, radar_health_msg.tv_sec);  
+            // RCLCPP_INFO(rclcpp::get_logger("Heartbeat"), "client_hostname : %s status: %u tv_sec: %u", 
+            //             radar_health_msg.client_hostname.c_str(), radar_health_msg.status, radar_health_msg.tv_sec);  
 
             radar_node_->publishHeartbeat(radar_health_msg);  
-            //radar_node_->radar_handler_.sendMessages("SS", receivedIp.c_str()); 
+            // radar_node_->radar_handler_.sendMessages("SS", receivedIp.c_str()); 
     }
 }
 

@@ -12,15 +12,17 @@
 #ifndef RADAR_DATA_HANDLER_INCLUDE_H
 #define RADAR_DATA_HANDLER_INCLUDE_H
 
-#include <thread>
-#include <netinet/in.h>
 #include <string>
 #include <atomic>
 #include <cstring>
 #include <cstdint>
+#include <thread>
+#include <queue>
 
+#include <netinet/in.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
+
 
 #include "message_parse.hpp" 
 // #include "heart_beat.hpp"  
@@ -29,7 +31,8 @@ namespace au_4d_radar
 {
     class device_au_radar_node;
 
-    class RadarPacketHandler {
+    class RadarPacketHandler
+    {
     public:
         RadarPacketHandler(device_au_radar_node* node);
         ~RadarPacketHandler();
@@ -40,18 +43,23 @@ namespace au_4d_radar
 
     private:
         bool initialize();
-        void receiveMessages(); 
+        void receiveMessages();
+        void processMessages();
 
         int rd_sockfd;
-        struct sockaddr_in server_addr_;
-        struct sockaddr_in client_addr_;
-        std::string client_ip;
-        std::atomic<bool> radar_running;
-        std::atomic<bool> point_cloud2_setting;
-        std::thread  thread_;
+        bool radar_running;
+        bool point_cloud2_setting;        
+        std::thread receive_thread_;
+        std::vector<std::thread> worker_threads_;
+        std::queue<std::vector<uint8_t>> message_queue_;
+        std::mutex queue_mutex_;
+        std::condition_variable queue_cv_;
+        sockaddr_in server_addr_;
+        sockaddr_in client_addr_;
+        device_au_radar_node* radar_node_;
         MessageParser message_parser_;
 
-        device_au_radar_node* radar_node_;
+        static const int NUM_WORKER_THREADS = 5; 
     };
 }
 
