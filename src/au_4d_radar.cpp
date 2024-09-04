@@ -32,7 +32,7 @@ device_au_radar_node::device_au_radar_node(const rclcpp::NodeOptions & options)
     //     std::bind(&device_au_radar_node::publish, this));
 
     rclcpp::QoS qos = rclcpp::SensorDataQoS();
-    qos.reliability(RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT);
+    qos.reliability(RMW_QOS_POLICY_RELIABILITY_RELIABLE); // RMW_QOS_POLICY_RELIABILITY_RELIABLE RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT
     pub_radar_point_cloud2 = this->create_publisher<sensor_msgs::msg::PointCloud2>(
                     "/device/au/radar/point_cloud2", qos);
                  
