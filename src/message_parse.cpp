@@ -215,7 +215,7 @@ void MessageParser::makeRadarScanMsg(uint8_t *p_buff, radar_msgs::msg::RadarScan
         idx += 4;           
         return_msg.range = Conversion::convertToFloat(&p_buff[idx]);
         idx += 4;
-        // return_msg.doppler_velocity = Conversion::convertToFloat(&p_buff[idx]);
+        return_msg.doppler_velocity = Conversion::convertToFloat(&p_buff[idx]);
         idx += 4;		    
         return_msg.azimuth = Conversion::convertToFloat(&p_buff[idx]);
         idx += 4;
