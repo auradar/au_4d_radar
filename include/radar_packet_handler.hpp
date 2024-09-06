@@ -59,7 +59,7 @@ namespace au_4d_radar
         device_au_radar_node* radar_node_;
         MessageParser message_parser_;
 
-        static const int NUM_WORKER_THREADS = 5; 
+        static const int NUM_WORKER_THREADS = 1; 
     };
 }
 
