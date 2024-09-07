@@ -1,4 +1,5 @@
 client_hostname: auradar-eeeeeeee
+#client_hostname: raspberrypi
 POINT_CLOUD2: true
 radars:
   dd98aa5: RADAR FRONT

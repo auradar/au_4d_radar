@@ -3,7 +3,7 @@
  * @author Antonio Ko(antonioko@au-sensor.com)
  * @brief Implementation of the radar_data_handler class for processing incoming radar data.
  * @version 2.1
- * @date 2024-09-04
+ * @date 2024-09-05
  * 
  * @copyright Copyright AU (c) 2024
  * 
@@ -16,7 +16,8 @@
 #include <sys/socket.h>
 #include <thread>
 #include <vector>
-
+#include <unordered_map>
+#include <queue>
 #include <mutex>
 #include <condition_variable>
 
@@ -26,13 +27,14 @@
 
 #define TARGET_PORT 7778
 #define BUFFER_SIZE 1500
+#define OFFSET 4 // offser for HeaderType
+
 
 enum HeaderType {
     HEADER_SCAN = 0x5343414e, 
     HEADER_TRACK = 0x54524143,
     HEADER_MON = 0x4d4f4e49    
 };
-
 
 namespace au_4d_radar
 {
@@ -48,9 +50,7 @@ void RadarPacketHandler::start() {
     if (initialize()) {
         receive_thread_ = std::thread(&RadarPacketHandler::receiveMessages, this);
 
-        for (int i = 0; i < NUM_WORKER_THREADS; ++i) {
-            worker_threads_.emplace_back(&RadarPacketHandler::processMessages, this);
-        }
+        process_thread_ = std::thread(&RadarPacketHandler::processMessages, this);
     } else {
         RCLCPP_ERROR(rclcpp::get_logger("RadarPacketHandler"), "Initialization failed, start aborted.");     
     }
@@ -66,14 +66,30 @@ void RadarPacketHandler::stop() {
 
     queue_cv_.notify_all();
 
+    {
+        std::lock_guard<std::mutex> lock(client_threads_mutex_);
+        for (auto& pair : client_queue_cvs_) {
+            pair.second.notify_all();
+        }
+    }
+
     if (receive_thread_.joinable()) {
         receive_thread_.join();
-    } 
+    }
 
-    for (auto& thread : worker_threads_) {
-        if (thread.joinable()) {
-            thread.join();
+    if (process_thread_.joinable()) {
+        process_thread_.join();
+    }
+
+    {
+        std::lock_guard<std::mutex> lock(client_threads_mutex_);
+        for (auto& pair : client_threads_) {
+            if (pair.second.joinable()) {
+                pair.second.join();
+            }
         }
+        client_threads_.clear();
+        client_queue_cvs_.clear();
     }
 }
 
@@ -140,6 +156,7 @@ void RadarPacketHandler::receiveMessages() {
 void RadarPacketHandler::processMessages() {
     while (radar_running) {
         std::vector<uint8_t> buffer;
+
         {
             std::unique_lock<std::mutex> lock(queue_mutex_);
             queue_cv_.wait(lock, [this] { return !message_queue_.empty() || !radar_running; });
@@ -152,28 +169,65 @@ void RadarPacketHandler::processMessages() {
             message_queue_.pop();
         }
 
-        uint32_t msg_type = Conversion::littleEndianToUint32(buffer.data());
-        uint16_t offset = sizeof(msg_type);
+        uint32_t unique_id = Conversion::littleEndianToUint32(&buffer[OFFSET]);
 
-        if(msg_type == HeaderType::HEADER_SCAN) { 
+        {
+            std::lock_guard<std::mutex> lock(client_queue_mutex_);
+            client_message_queues_[unique_id].push(buffer);
+        }
+
+        {
+            std::lock_guard<std::mutex> lock(client_threads_mutex_);
+            if (client_threads_.find(unique_id) == client_threads_.end()) {
+                client_queue_cvs_[unique_id];  
+                client_threads_[unique_id] = std::thread(&RadarPacketHandler::processClientMessages, this, unique_id);
+            }
+        }
+
+        client_queue_cvs_[unique_id].notify_one(); 
+    }
+}
+
+void RadarPacketHandler::processClientMessages(uint32_t unique_id) {
+    const uint32_t uniqueId = unique_id;
+    std::cout << "Create processClientMessage uniqueId "<< std::hex << uniqueId << std::endl;
+    while (radar_running) {
+        std::vector<uint8_t> buffer;
+        {
+            std::unique_lock<std::mutex> lock(client_queue_mutex_);
+            client_queue_cvs_[unique_id].wait(lock, [this, &unique_id] { 
+                return !client_message_queues_[unique_id].empty() || !radar_running; 
+            });
+
+            if (!radar_running && client_message_queues_[unique_id].empty()) {
+                break;
+            }
+
+            buffer = std::move(client_message_queues_[unique_id].front());
+            client_message_queues_[unique_id].pop();
+        }
+
+        std::cout << "Create processClientMessage uniqueId "<< std::hex << uniqueId << " unique_id " << Conversion::littleEndianToUint32(&buffer[OFFSET]) << std::endl;  
+
+        uint32_t msg_type = Conversion::littleEndianToUint32(buffer.data());      
+        if (msg_type == HeaderType::HEADER_SCAN) {
             radar_msgs::msg::RadarScan radar_scan_msg;
+            message_parser_.parseRadarScanMsg(&buffer[OFFSET], radar_scan_msg);
+            radar_node_->publishRadarScanMsg(radar_scan_msg);
 
-            message_parser_.parseRadarScanMsg(&buffer[offset], radar_scan_msg);
-            radar_node_->publishRadarScanMsg(radar_scan_msg);    
-
-            if(point_cloud2_setting) {
-                sensor_msgs::msg::PointCloud2 radar_cloud_msg;                                                     
-                message_parser_.parsePointCloud2Msg(&buffer[offset], radar_cloud_msg);
-                radar_node_->publishRadarPointCloud2(radar_cloud_msg);    
-            }         
-        } else if(msg_type == HeaderType::HEADER_TRACK) {
+            if (point_cloud2_setting) {
+                sensor_msgs::msg::PointCloud2 radar_cloud_msg;
+                message_parser_.parsePointCloud2Msg(&buffer[OFFSET], radar_cloud_msg);
+                radar_node_->publishRadarPointCloud2(radar_cloud_msg);
+            }
+        } else if (msg_type == HeaderType::HEADER_TRACK) {
             radar_msgs::msg::RadarTracks radar_tracks_msg;
-            message_parser_.parseRadarTrackMsg(&buffer[offset], radar_tracks_msg);
-            radar_node_->publishRadarTrackMsg(radar_tracks_msg);           
-        } else if(msg_type == HeaderType::HEADER_MON) {
-            RCLCPP_INFO(rclcpp::get_logger("RadarPacketHandler"), "HEADER_MON message");         
+            message_parser_.parseRadarTrackMsg(&buffer[OFFSET], radar_tracks_msg);
+            radar_node_->publishRadarTrackMsg(radar_tracks_msg);
+        } else if (msg_type == HeaderType::HEADER_MON) {
+            RCLCPP_INFO(rclcpp::get_logger("RadarPacketHandler"), "HEADER_MON message");
         } else {
-            RCLCPP_INFO(rclcpp::get_logger("RadarPacketHandler"), "Failed to decode msg_type: %08x", msg_type);           
+            RCLCPP_INFO(rclcpp::get_logger("RadarPacketHandler"), "Failed to decode msg_type: %08x", msg_type);
         }
     }
 }
@@ -183,15 +237,14 @@ int RadarPacketHandler::sendMessages(const char* msg, const char* addr) {
     memset(&client_addr, 0, sizeof(client_addr));
     client_addr.sin_family = AF_INET;
     client_addr.sin_addr.s_addr = inet_addr(addr);
-    client_addr.sin_port = htons(TARGET_PORT-1);
+    client_addr.sin_port = htons(TARGET_PORT - 1);
 
     int send_len = sendto(rd_sockfd, msg, strlen(msg), 0, (struct sockaddr*)&client_addr, sizeof(client_addr));
     if (send_len == -1) {
-        RCLCPP_ERROR(rclcpp::get_logger("RadarPacketHandler"), "Failed to send message");         
+        RCLCPP_ERROR(rclcpp::get_logger("RadarPacketHandler"), "Failed to send message");
         return -1;
     }
-    //RCLCPP_INFO(rclcpp::get_logger("RadarPacketHandler"), "Message sent: %s msg: %s", addr, msg);      
     return 0;
 }
 
-} // namespace au_4d_radar
+}  // namespace au_4d_radar

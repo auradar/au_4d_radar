@@ -31,16 +31,16 @@ namespace au_4d_radar
     class MessageParser
     {
     public:
-        MessageParser(device_au_radar_node* node); 
-        MessageParser()  = default;          
-        ~MessageParser() = default;  
+        MessageParser(device_au_radar_node* node);
+        MessageParser()  = default;
+        ~MessageParser() = default;
 
         void parsePointCloud2Msg(uint8_t *p_buff, sensor_msgs::msg::PointCloud2& radar_cloud_msg);
         void parseRadarScanMsg(uint8_t *p_buff, radar_msgs::msg::RadarScan& radar_scan_msg);
         void parseRadarTrackMsg(uint8_t *p_buff, radar_msgs::msg::RadarTracks& radar_tracks_msg);
 
     private:
-        void makeRadarPointCloud2Msg(uint8_t *p_buff, sensor_msgs::msg::PointCloud2& cloud_msg);       
+        void makeRadarPointCloud2Msg(uint8_t *p_buff, sensor_msgs::msg::PointCloud2& cloud_msg); 
         void makeRadarScanMsg(uint8_t *p_buff, radar_msgs::msg::RadarScan& radar_scan_msg);
         void makeRadarTracksMsg(uint8_t *p_buff, radar_msgs::msg::RadarTracks& radar_tracks_msg);
         
@@ -49,7 +49,7 @@ namespace au_4d_radar
         uint32_t stamp_tv_sec_;
         uint32_t stamp_tv_nsec_;
 
-        device_au_radar_node* radar_node_;        
+        device_au_radar_node* radar_node_;
     };
 
 }

@@ -15,7 +15,7 @@ mkdir -p ~/share/ros2_ws/src
 
 **Download AU 4D Radar ROS2 Source code**:
 ```bash
-$ export VERSION=v2.0
+$ export VERSION=v2.1
 $ cd ~/share/ros2_ws/src
 $ git clone https://github.com/auradar/au_4d_radar.git
 $ cd au_4d_radar
