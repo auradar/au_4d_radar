@@ -1,9 +1,9 @@
   /**
  * @file au_4d_radar.cpp
- * @author kisoo.kim@au-sensor.com, antonioko@au-sensor.com
+ * @author antonioko@au-sensor.com
  * @brief 
- * @version 1.0
- * @date 2024-08-23
+ * @version 1.1
+ * @date 2024-09-11
  * 
  * @copyright Copyright AU (c) 2024
  * 
@@ -12,10 +12,6 @@
 #include "au_4d_radar.hpp"
 
 #define PUB_TIME 	10ms
-#define MON_TIME 	1000ms
-#define UDP_MTU		1500
-
-// using namespace std::chrono_literals;
 
 namespace au_4d_radar {
 
@@ -83,7 +79,8 @@ void device_au_radar_node::get_param(rclcpp::Node::SharedPtr nh, const std::stri
 void device_au_radar_node::publishRadarScanMsg(radar_msgs::msg::RadarScan &radar_scan_msg) {
     std::lock_guard<std::mutex> lock(mtx_radar_scan);
     pub_radar_scan->publish(radar_scan_msg);
-    // RCLCPP_INFO(rclcpp::get_logger("radar_node"), "pub_radar_scan frame_id %s", radar_scan_msg.header.frame_id.c_str());    
+    RCLCPP_INFO(rclcpp::get_logger("radar_node"), "pub_radar_scan frame_id %s 50ms %02u", 
+        radar_scan_msg.header.frame_id.c_str(), radar_scan_msg.header.stamp.nanosec / 10000000);    
 }
 
 void device_au_radar_node::publishRadarTrackMsg(radar_msgs::msg::RadarTracks &radar_tracks_msg) {
@@ -94,8 +91,8 @@ void device_au_radar_node::publishRadarTrackMsg(radar_msgs::msg::RadarTracks &ra
 void device_au_radar_node::publishRadarPointCloud2(sensor_msgs::msg::PointCloud2& radar_cloud_msg) {
     std::lock_guard<std::mutex> lock(mtx_point_cloud2);
     pub_radar_point_cloud2->publish(radar_cloud_msg);
-    RCLCPP_INFO(rclcpp::get_logger("radar_node"), "pub_radar_point_cloud2 frame_id %s 50ms %02u", 
-        radar_cloud_msg.header.frame_id.c_str(), radar_cloud_msg.header.stamp.nanosec / 10000000);    
+    // RCLCPP_INFO(rclcpp::get_logger("radar_node"), "pub_radar_point_cloud2 frame_id %s 50ms %02u", 
+    //     radar_cloud_msg.header.frame_id.c_str(), radar_cloud_msg.header.stamp.nanosec / 10000000);    
 }
 
 void device_au_radar_node::publishHeartbeat(mon_msgs::msg::RadarHealth& radar_health_msg) {

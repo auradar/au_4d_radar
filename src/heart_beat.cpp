@@ -108,7 +108,7 @@ bool Heartbeat::initialize() {
     memset(&send_server_addr, 0, sizeof(send_server_addr));
     send_server_addr.sin_family      = AF_INET;
     send_server_addr.sin_port        = htons(SEND_PORT);
-    send_server_addr.sin_addr.s_addr = INADDR_BROADCAST;  // Set to broadcast address to send responses
+    send_server_addr.sin_addr.s_addr = INADDR_BROADCAST; 
 
     if (bind(recv_sockfd, (const struct sockaddr *)&recv_server_addr, sizeof(recv_server_addr)) < 0) {
         RCLCPP_ERROR(rclcpp::get_logger("Heartbeat"), "Bind failed");         

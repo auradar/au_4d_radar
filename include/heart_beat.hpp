@@ -2,8 +2,8 @@
  * @file heart_beat.hpp
  * @author Antonio Ko(antonioko@au-sensor.com)
  * @brief Supports automatic connection and communication functions without having to set the IP of each component in a local network environment
- * @version 0.1
- * @date 2024-08-05
+ * @version 1.0
+ * @date 2024-09-11
  * 
  * @copyright Copyright AU (c) 2024
  * 

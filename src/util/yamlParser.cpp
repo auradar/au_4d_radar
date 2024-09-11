@@ -3,8 +3,8 @@
  * @file yamlParser.cpp
  * @author Antonio Ko(antonioko@au-sensor.com)
  * @brief 
- * @version 0.1
- * @date 2024-08-05
+ * @version 1.0
+ * @date 2024-09-11
  * 
  * @copyright Copyright AU (c) 2024
  * 
