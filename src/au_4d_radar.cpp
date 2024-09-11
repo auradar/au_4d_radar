@@ -53,14 +53,14 @@ device_au_radar_node::device_au_radar_node(const rclcpp::NodeOptions & options)
     heart_beat_.start();
     radar_handler_.start();
 
-    RCLCPP_INFO(rclcpp::get_logger("device_au_radar_node"), "Start AU 4D Radar Driver Node");
+    RCLCPP_INFO(rclcpp::get_logger("radar_node"), "Start AU 4D Radar Driver Node");
 }
 
 void device_au_radar_node::interruptHandler(int sig) {
     RCLCPP_ERROR(rclcpp::get_logger("interruptHandler"), "signum=%d", sig);
 
     if (sig == SIGINT || sig == SIGHUP || sig == SIGKILL || sig == SIGSEGV || sig == SIGTERM) {
-        RCLCPP_ERROR(rclcpp::get_logger("device_au_radar_node"), "interruptHandler performed");
+        RCLCPP_ERROR(rclcpp::get_logger("radar_node"), "interruptHandler performed");
 
         instance_->heart_beat_.stop();
         instance_->radar_handler_.stop();
@@ -83,7 +83,7 @@ void device_au_radar_node::get_param(rclcpp::Node::SharedPtr nh, const std::stri
 void device_au_radar_node::publishRadarScanMsg(radar_msgs::msg::RadarScan &radar_scan_msg) {
     std::lock_guard<std::mutex> lock(mtx_radar_scan);
     pub_radar_scan->publish(radar_scan_msg);
-    // RCLCPP_INFO(rclcpp::get_logger("device_au_radar_node"), "publishRadarScanMsg frame_id %s", radar_scan_msg.header.frame_id.c_str());    
+    // RCLCPP_INFO(rclcpp::get_logger("radar_node"), "pub_radar_scan frame_id %s", radar_scan_msg.header.frame_id.c_str());    
 }
 
 void device_au_radar_node::publishRadarTrackMsg(radar_msgs::msg::RadarTracks &radar_tracks_msg) {
@@ -94,13 +94,13 @@ void device_au_radar_node::publishRadarTrackMsg(radar_msgs::msg::RadarTracks &ra
 void device_au_radar_node::publishRadarPointCloud2(sensor_msgs::msg::PointCloud2& radar_cloud_msg) {
     std::lock_guard<std::mutex> lock(mtx_point_cloud2);
     pub_radar_point_cloud2->publish(radar_cloud_msg);
-    RCLCPP_INFO(rclcpp::get_logger("device_au_radar_node"), "publishRadarPointCloud2 frame_id %s 50ms %02u", 
+    RCLCPP_INFO(rclcpp::get_logger("radar_node"), "pub_radar_point_cloud2 frame_id %s 50ms %02u", 
         radar_cloud_msg.header.frame_id.c_str(), radar_cloud_msg.header.stamp.nanosec / 10000000);    
 }
 
 void device_au_radar_node::publishHeartbeat(mon_msgs::msg::RadarHealth& radar_health_msg) {
-    // RCLCPP_INFO(rclcpp::get_logger("device_au_radar_node"), 
-    // "publish radar health msgs client_hostname : %s status: %u tv_sec: %u", 
+    // RCLCPP_INFO(rclcpp::get_logger("radar_node"), 
+    // "pub_radar_mon hostname : %s status: %u tv_sec: %u", 
     // radar_health_msg.client_hostname.c_str(), radar_health_msg.status, radar_health_msg.tv_sec);  
 
     pub_radar_mon->publish(radar_health_msg);  
