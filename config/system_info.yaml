@@ -1,9 +1,16 @@
 client_hostname: auradar-eeeeeeee
-#client_hostname: raspberrypi
 POINT_CLOUD2: true
 radars:
-  dd98aa5: RADAR FRONT
-  2812b707: RADAR FRONT RIGHT
-  2d12af50: RADAR REAR RIGHT
-  564d6b80: RADAR REAR LEFT
-  2f7e83f9: RADAR FRONT LEFT
+  # BTS 5EA
+  5ff85500: RADAR1
+  05d9f6e4: RADAR2
+  610ddb0e: RADAR3
+  c0a4ab10: RADAR4
+  9c281337: RADAR5
+  #
+  # LG-E
+  # 0dd98aa5: RADAR FRONT
+  # 2812b707: RADAR FRONT RIGHT
+  # 2d12af50: RADAR REAR RIGHT
+  # 564d6b80: RADAR REAR LEFT
+  # 2f7e83f9: RADAR FRONT LEFT

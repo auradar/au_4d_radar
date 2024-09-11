@@ -11,6 +11,8 @@
 #ifndef AU_4D_RADAR_HPP
 #define AU_4D_RADAR_HPP
 
+#include <mutex>
+
 #include "rclcpp/rclcpp.hpp"
 #include "mon_msgs/msg/radar_health.hpp"
 #include <sensor_msgs/msg/point_cloud2.hpp>
@@ -56,6 +58,10 @@ namespace au_4d_radar
 
         rclcpp::TimerBase::SharedPtr timer_;
         rclcpp::TimerBase::SharedPtr timer_mon_;
+
+        std::mutex mtx_point_cloud2;
+        std::mutex mtx_radar_scan;
+        std::mutex mtx_radar_track; 
 
         static uint32_t temp_cnt;
        

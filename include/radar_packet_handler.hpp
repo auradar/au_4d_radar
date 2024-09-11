@@ -3,7 +3,7 @@
  * @author Antonio Ko(antonioko@au-sensor.com)
  * @brief Implementation of the radar_data_handler class for processing incoming radar data.
  * @version 1.1
- * @date 2024-09-5
+ * @date 2024-09-05
  * 
  * @copyright Copyright AU (c) 2024
  * 
@@ -12,12 +12,14 @@
 #ifndef RADAR_PACKET_HANDLER_INCLUDE_H
 #define RADAR_PACKET_HANDLER_INCLUDE_H
 
+#include <condition_variable>
 #include <string>
 #include <atomic>
 #include <cstring>
 #include <cstdint>
 #include <thread>
 #include <queue>
+#include <mutex>
 
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -44,11 +46,15 @@ namespace au_4d_radar
     private:
         bool initialize();
         void receiveMessages();
-        void processMessages();
+        void receiveMessagesTwoQueues();        
+        void processMessages();        
         void processClientMessages(uint32_t unique_id);
 
         int rd_sockfd;
-        bool radar_running;
+        device_au_radar_node* radar_node_;
+        std::atomic<bool> receive_running;
+        std::atomic<bool> process_running;        
+        std::atomic<bool> process_runnings;            
         bool point_cloud2_setting;
 
         std::thread receive_thread_;
@@ -59,8 +65,6 @@ namespace au_4d_radar
 
         sockaddr_in server_addr_;
         sockaddr_in client_addr_;
-        device_au_radar_node* radar_node_;
-
         MessageParser message_parser_;
 
         std::unordered_map<uint32_t, std::thread> client_threads_;
@@ -68,7 +72,7 @@ namespace au_4d_radar
         std::unordered_map<uint32_t, std::queue<std::vector<uint8_t>>> client_message_queues_;
         std::mutex client_queue_mutex_;
         std::unordered_map<uint32_t, std::condition_variable> client_queue_cvs_;
-
+   
     };
 }
 

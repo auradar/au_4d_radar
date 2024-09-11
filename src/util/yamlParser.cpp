@@ -61,7 +61,7 @@ std::string YamlParser::readFrameId(const std::string& key) {
             if (radars[key]) {
                 return radars[key].as<std::string>();
             } else {
-                //RCLCPP_ERROR(rclcpp::get_logger("readFrameId"), "frame_id not found in 'radars' section: %s", key.c_str());
+                RCLCPP_ERROR(rclcpp::get_logger("readFrameId"), "frame_id not found in 'radars' section: %s", key.c_str());
                 return "";
             }
         } else {

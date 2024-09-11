@@ -4,7 +4,7 @@ AU 4D Radar
 ## Introduction
 au_4d_radar is a collection of ROS2 packages supporting 4D Radar Sensors.
 This program has been tested on ubuntu 22.04 ROS2 humble.  
-Supports automatic connection and communication functions without having to set the IP of each component in a local network environment.
+Supports automatic connection and communication functions without having to set the IP of each Radar sensor in a local network environment.
 
 ## How to build the au_4d_radar 
 
@@ -35,7 +35,7 @@ $ cd ~/share/ros2_ws/src
 $ git clone -b v2.0 https://github.com/auradar/mon_msgs.git
 ```
 
-## Install FlatBuffers:
+### Install FlatBuffers:
 **1. Download the FlatBuffers**
   ```bash
   export VERSION=v24.3.25
@@ -45,7 +45,7 @@ $ git clone -b v2.0 https://github.com/auradar/mon_msgs.git
   git submodule update --init --recursive
   ```
 **2. Build and install the FlatBuffers**
-  ```bash
+  ```cmake
   mkdir build
   cd build
 
@@ -60,7 +60,7 @@ $ git clone -b v2.0 https://github.com/auradar/mon_msgs.git
   sudo make install
   ```
 
-**Frame ID Naming convention**:
+### Frame ID Naming convention:
 >The `system_info.yaml` file is structured as follows.
 ```yaml
 radars:
@@ -70,7 +70,7 @@ radars:
 ```yaml
 radars:
   27c06058: FRONT RIGHT
-  db089dfa: REAR LEFT
+  0b089dfa: REAR LEFT
 ```
 
 **Compile**:
@@ -86,7 +86,7 @@ source install/local_setup.bash
 ros2 launch au_4d_radar run_radar.launch.py
 ```
 
-## Run-time composition using ROS services
+### Run-time composition using ROS services
 
 **Run in shell 1**:
 >In the first shell, start the component container:

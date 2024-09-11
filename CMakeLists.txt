@@ -2,9 +2,9 @@ cmake_minimum_required(VERSION 3.22)
 
 project(au_4d_radar)
 
-# Default to C++20
+# Default to C++23
 if(NOT CMAKE_CXX_STANDARD)
-  set(CMAKE_CXX_STANDARD 20)
+  set(CMAKE_CXX_STANDARD 23)
   set(CMAKE_CXX_STANDARD_REQUIRED ON)
   set(CMAKE_CXX_EXTENSIONS OFF)  
 endif()
@@ -33,7 +33,6 @@ set(node_plugins "")
 
 add_library(device_au_radar_node SHARED
   src/au_4d_radar.cpp
-  src/util/conversion.cpp
   src/util/yamlParser.cpp  
   src/message_parse.cpp
   src/radar_packet_handler.cpp  

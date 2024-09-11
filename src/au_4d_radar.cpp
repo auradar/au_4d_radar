@@ -15,7 +15,7 @@
 #define MON_TIME 	1000ms
 #define UDP_MTU		1500
 
-using namespace std::chrono_literals;
+// using namespace std::chrono_literals;
 
 namespace au_4d_radar {
 
@@ -81,16 +81,21 @@ void device_au_radar_node::get_param(rclcpp::Node::SharedPtr nh, const std::stri
 }
 
 void device_au_radar_node::publishRadarScanMsg(radar_msgs::msg::RadarScan &radar_scan_msg) {
+    std::lock_guard<std::mutex> lock(mtx_radar_scan);
     pub_radar_scan->publish(radar_scan_msg);
+    // RCLCPP_INFO(rclcpp::get_logger("device_au_radar_node"), "publishRadarScanMsg frame_id %s", radar_scan_msg.header.frame_id.c_str());    
 }
 
 void device_au_radar_node::publishRadarTrackMsg(radar_msgs::msg::RadarTracks &radar_tracks_msg) {
+    std::lock_guard<std::mutex> lock(mtx_radar_track);
     pub_radar_track->publish(radar_tracks_msg);  
 }
 
 void device_au_radar_node::publishRadarPointCloud2(sensor_msgs::msg::PointCloud2& radar_cloud_msg) {
-    // RCLCPP_INFO(rclcpp::get_logger("device_au_radar_node"), "publishRadarPointCloud2 performed");
+    std::lock_guard<std::mutex> lock(mtx_point_cloud2);
     pub_radar_point_cloud2->publish(radar_cloud_msg);
+    RCLCPP_INFO(rclcpp::get_logger("device_au_radar_node"), "publishRadarPointCloud2 frame_id %s 50ms %02u", 
+        radar_cloud_msg.header.frame_id.c_str(), radar_cloud_msg.header.stamp.nanosec / 10000000);    
 }
 
 void device_au_radar_node::publishHeartbeat(mon_msgs::msg::RadarHealth& radar_health_msg) {
