@@ -24,7 +24,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
-
+#include <map>
 
 #include "message_parse.hpp" 
 // #include "heart_beat.hpp"  
@@ -43,6 +43,19 @@ namespace au_4d_radar
         void stop();
         int sendMessages(const char* msg, const char* addr);
 
+        inline std::string getRadarName(uint32_t radar_id) {
+            // Retrieve the map of radars
+            std::map<uint32_t, std::string> radars_map = radarsMap;
+
+            // Search for the radar_id in the map
+            auto it = radars_map.find(radar_id);
+            if (it != radars_map.end()) {
+                return it->second;  // Return the radar name if found
+            } else {
+                return "Radar ID not found";  // Return an error message if not found
+            }
+        }
+
     private:
         bool initialize();
         void receiveMessages();
@@ -55,7 +68,7 @@ namespace au_4d_radar
         std::atomic<bool> receive_running;
         std::atomic<bool> process_running;        
         std::atomic<bool> process_runnings;            
-        bool point_cloud2_setting;
+        std::atomic<bool> point_cloud2_setting;
 
         std::thread receive_thread_;
         std::thread process_thread_;
@@ -72,7 +85,7 @@ namespace au_4d_radar
         std::unordered_map<uint32_t, std::queue<std::vector<uint8_t>>> client_message_queues_;
         std::mutex client_queue_mutex_;
         std::unordered_map<uint32_t, std::condition_variable> client_queue_cvs_;
-   
+        std::map<uint32_t, std::string> radarsMap;
     };
 }
 

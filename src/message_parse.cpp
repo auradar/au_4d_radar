@@ -68,8 +68,9 @@ void MessageParser::makeRadarPointCloud2Msg(uint8_t *p_buff, sensor_msgs::msg::P
     header.ui16PCKN = Conversion::littleEndianToUint16(&p_buff[idx]);
     idx += 2;
 
-    if(header.ui32PN > 60) { 
-        RCLCPP_ERROR(rclcpp::get_logger("point_cloud2_msg"), "Failed to decode RadarPointCloud2Msg ui32PN: %u", header.ui32PN);               
+    if(header.ui32PN > 60 ||  header.ui32TPN > 1600 || header.ui16TPCKN > 28 || header.ui16PCKN > 28) {    
+        RCLCPP_ERROR(rclcpp::get_logger("point_cloud2_msg"), "Failed to decode  frame_id %s FN %u TPN %u PN %u TPCKN %u PCKN %u", 
+                        frame_id_.c_str(), header.ui32FN, header.ui32TPN, header.ui32PN, header.ui16TPCKN, header.ui16PCKN);                                    
         return;
     }
 
@@ -86,7 +87,7 @@ void MessageParser::makeRadarPointCloud2Msg(uint8_t *p_buff, sensor_msgs::msg::P
     stamp_tv_nsec_ = header.ui32TN;
 
     // RCLCPP_INFO(rclcpp::get_logger("point_cloud2"), "frame_id %s FN %u TPN %u PN %u TPCKN %u PCKN %u", 
-    //                                                 frame_id_.c_str(), header.ui32FN, header.ui32TPN, header.ui32PN, header.ui16TPCKN, header.ui16PCKN); 
+    //              frame_id_.c_str(), header.ui32FN, header.ui32TPN, header.ui32PN, header.ui16TPCKN, header.ui16PCKN); 
 
     // https://github.com/ros2/common_interfaces/blob/rolling/sensor_msgs/msg/PointCloud2.msg
     cloud_msg.header.frame_id = frame_id_;
@@ -183,8 +184,9 @@ void MessageParser::makeRadarScanMsg(uint8_t *p_buff, radar_msgs::msg::RadarScan
     header.ui16PCKN = Conversion::littleEndianToUint16(&p_buff[idx]);
     idx += 2;
 
-    if(header.ui32PN > 60){ 
-        RCLCPP_ERROR(rclcpp::get_logger("radar_scan"), "Failed to decode RadarScanMsg ui32PN: %u", header.ui32PN);               
+    if(header.ui32PN > 60 ||  header.ui32TPN > 1600 || header.ui16TPCKN > 28 || header.ui16PCKN > 28) {    
+        RCLCPP_ERROR(rclcpp::get_logger("radar_scan"), "Failed to decode  frame_id %s FN %u TPN %u PN %u TPCKN %u PCKN %u", 
+                        frame_id_.c_str(), header.ui32FN, header.ui32TPN, header.ui32PN, header.ui16TPCKN, header.ui16PCKN);                                    
         return;
     }
 
@@ -287,6 +289,8 @@ void MessageParser::parseRadarScanMsg(uint8_t *p_buff, radar_msgs::msg::RadarSca
 }
 
 void MessageParser::parseRadarTrackMsg(uint8_t *p_buff, radar_msgs::msg::RadarTracks& radar_tracks_msg, bool& complete) {
+    // To Do
+    return;    
     makeRadarTracksMsg(p_buff, radar_tracks_msg, complete);  
 }
 

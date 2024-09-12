@@ -74,3 +74,34 @@ std::string YamlParser::readFrameId(const std::string& key) {
     }
 }
 
+std::map<uint32_t, std::string> YamlParser::readRadarsAsMap() {
+    std::map<uint32_t, std::string> radars_map;
+
+    try {
+        std::string yaml_file_path = ament_index_cpp::get_package_share_directory("au_4d_radar") + "/config/system_info.yaml";        
+        YAML::Node config = YAML::LoadFile(yaml_file_path);
+
+        if (config["radars"]) {
+            YAML::Node radars = config["radars"];
+            
+            for (YAML::const_iterator it = radars.begin(); it != radars.end(); ++it) {
+                std::string key = it->first.as<std::string>();
+                std::string value = it->second.as<std::string>();
+
+                // Convert key from hexadecimal string to uint32_t
+                std::stringstream ss;
+                uint32_t radar_id;
+                ss << std::hex << key;                 
+                ss >> radar_id;
+
+                radars_map[radar_id] = value;
+            }
+        } else {
+            RCLCPP_ERROR(rclcpp::get_logger("readRadarsAsMap"), "'radars' section not found in system_info.yaml");
+        }
+    } catch (const YAML::Exception& e) {
+        RCLCPP_ERROR(rclcpp::get_logger("readRadarsAsMap"), "Error reading YAML file: %s", e.what());
+    }
+
+    return radars_map;
+}
