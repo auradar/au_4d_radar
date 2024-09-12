@@ -284,11 +284,11 @@ void RadarPacketHandler::processClientMessages(uint32_t unique_id) {
         switch (msg_type) {
             case HeaderType::HEADER_SCAN: {
                 message_parser_.parseRadarScanMsg(&buffer[OFFSET], radar_scan_msg, completeRadarScanMsg);
-                // if (completeRadarScanMsg) {              
-                //     radar_node_->publishRadarScanMsg(radar_scan_msg);
-                //     radar_scan_msg.returns.clear();  
-                //    // RCLCPP_INFO(rclcpp::get_logger("RadarPacketHandler"), "RadarScan frame_id %s", radar_scan_msg.header.frame_id.c_str());                    
-                // }
+                if (completeRadarScanMsg) {              
+                    radar_node_->publishRadarScanMsg(radar_scan_msg);
+                    radar_scan_msg.returns.clear();  
+                   // RCLCPP_INFO(rclcpp::get_logger("RadarPacketHandler"), "RadarScan frame_id %s", radar_scan_msg.header.frame_id.c_str());                    
+                }
 
                 if (point_cloud2_setting) {
                     message_parser_.parsePointCloud2Msg(&buffer1[OFFSET], radar_cloud_msg, completePointCloud2Msg);
