@@ -52,9 +52,9 @@ namespace au_4d_radar
         rclcpp::Publisher<radar_msgs::msg::RadarTracks>::SharedPtr pub_radar_track;
         rclcpp::Publisher<mon_msgs::msg::RadarHealth>::SharedPtr pub_radar_mon;
 
-        radar_msgs::msg::RadarScan radar_scan_msg;
-        radar_msgs::msg::RadarTracks radar_tracks_msg;
-        mon_msgs::msg::RadarHealth radar_health_msg;
+        // radar_msgs::msg::RadarScan radar_scan_msg;
+        // radar_msgs::msg::RadarTracks radar_tracks_msg;
+        // mon_msgs::msg::RadarHealth radar_health_msg;
 
         rclcpp::TimerBase::SharedPtr timer_;
         rclcpp::TimerBase::SharedPtr timer_mon_;

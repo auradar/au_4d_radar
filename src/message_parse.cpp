@@ -42,6 +42,20 @@ namespace au_4d_radar
 MessageParser::MessageParser(device_au_radar_node* node)
     : radar_node_(node) { }
 
+void MessageParser::init() {
+    radarsMap_ = YamlParser::readRadarsAsMap();  
+}
+
+std::string MessageParser::getFrameId(uint32_t radar_id) {
+    std::lock_guard<std::recursive_mutex> lock(radar_map_mutex_);
+    auto it = radarsMap_.find(radar_id);
+    if (it != radarsMap_.end()) {
+        return it->second;  
+    } else {
+        return ""; 
+    }
+}
+
 void MessageParser::makeRadarPointCloud2Msg(uint8_t *p_buff, sensor_msgs::msg::PointCloud2& cloud_msg, bool& complete) {
     std::lock_guard<std::mutex> lock(mtx_point_cloud2);
     uint32_t idx = 0;
@@ -76,12 +90,14 @@ void MessageParser::makeRadarPointCloud2Msg(uint8_t *p_buff, sensor_msgs::msg::P
 
     complete = (header.ui16TPCKN == header.ui16PCKN);
 
-    // https://github.com/ros2/common_interfaces/blob/rolling/std_msgs/msg/Header.msg
-    //sequence_id_ = header.ui32FN; 
-    ss << std::hex << std::setw(8) << std::setfill('0') << header.ui32UID; 
-    frame_id_ = YamlParser::readFrameId(ss.str());
-    if(frame_id_.empty())
+      // https://github.com/ros2/common_interfaces/blob/rolling/std_msgs/msg/Header.msg
+      //sequence_id_ = header.ui32FN; 
+    
+    frame_id_ = getFrameId(header.ui32UID);
+    if(frame_id_.empty()) {
+        ss << std::hex << std::setw(8) << std::setfill('0') << header.ui32UID;     
         frame_id_ = ss.str();
+    }
 
     stamp_tv_sec_ = header.ui32TS;
     stamp_tv_nsec_ = header.ui32TN;
@@ -192,19 +208,21 @@ void MessageParser::makeRadarScanMsg(uint8_t *p_buff, radar_msgs::msg::RadarScan
 
     complete = (header.ui16TPCKN == header.ui16PCKN);    
 
-   // https://github.com/ros2/common_interfaces/blob/rolling/std_msgs/msg/Header.msg
-    //sequence_id_ = header.ui32FN; 
-    ss << std::hex << std::setw(8) << std::setfill('0') << header.ui32UID;    
-    frame_id_ = YamlParser::readFrameId(ss.str());
-    if(frame_id_.empty())
+     // https://github.com/ros2/common_interfaces/blob/rolling/std_msgs/msg/Header.msg
+     //sequence_id_ = header.ui32FN; 
+    
+    frame_id_ = getFrameId(header.ui32UID);
+    if(frame_id_.empty()) {
+        ss << std::hex << std::setw(8) << std::setfill('0') << header.ui32UID;     
         frame_id_ = ss.str();
+    }
 
     stamp_tv_sec_ = header.ui32TS;
     stamp_tv_nsec_ = header.ui32TN;
 
     // std::cout << "frame_id "<< std::hex << header.ui32UID << std::endl;
-//    RCLCPP_INFO(rclcpp::get_logger("radar_scan"), "frame_id %08x FN %u TPN %u PN %u TPCKN %u PCKN %u", 
-//                                                header.ui32UID, header.ui32FN, header.ui32TPN, header.ui32PN, header.ui16TPCKN, header.ui16PCKN); 
+//    RCLCPP_INFO(rclcpp::get_logger("radar_scan"), "frame_id %08x %s FN %u TPN %u PN %u TPCKN %u PCKN %u", 
+//                                                header.ui32UID, frame_id_.c_str(), header.ui32FN, header.ui32TPN, header.ui32PN, header.ui16TPCKN, header.ui16PCKN); 
 
     radar_scan_msg.header.frame_id = frame_id_;
     radar_scan_msg.header.stamp.sec = stamp_tv_sec_;

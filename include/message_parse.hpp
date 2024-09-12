@@ -34,6 +34,7 @@ namespace au_4d_radar
         MessageParser(device_au_radar_node* node);
         MessageParser()  = default;
         ~MessageParser() = default;
+        void init();
 
         void parsePointCloud2Msg(uint8_t *p_buff, sensor_msgs::msg::PointCloud2& radar_cloud_msg, bool& complete);
         void parseRadarScanMsg(uint8_t *p_buff, radar_msgs::msg::RadarScan& radar_scan_msg, bool& complete);
@@ -43,7 +44,8 @@ namespace au_4d_radar
         void makeRadarPointCloud2Msg(uint8_t *p_buff, sensor_msgs::msg::PointCloud2& cloud_msg, bool& complete); 
         void makeRadarScanMsg(uint8_t *p_buff, radar_msgs::msg::RadarScan& radar_scan_msg, bool& complete);
         void makeRadarTracksMsg(uint8_t *p_buff, radar_msgs::msg::RadarTracks& radar_tracks_msg, bool& complete);
-        
+        std::string getFrameId(uint32_t radar_id);
+
         uint32_t sequence_id_;
         std::string frame_id_;
         uint32_t stamp_tv_sec_;
@@ -51,6 +53,8 @@ namespace au_4d_radar
         std::mutex mtx_point_cloud2;
         std::mutex mtx_radar_scan;
         std::mutex mtx_radar_track;                
+        std::recursive_mutex radar_map_mutex_;
+        std::unordered_map<uint32_t, std::string> radarsMap_;
 
         device_au_radar_node* radar_node_;
     };

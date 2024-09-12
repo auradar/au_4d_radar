@@ -1,3 +1,8 @@
+client_hostname: raspberrypi
+client_hostname: orangepi5
+client_hostname: auradar-eeeeeeee
+    
+
   # BTS 5EA
   9c281337: RADAR FRONT  
   05d9f6e4: RADAR FRONT RIGHT  
