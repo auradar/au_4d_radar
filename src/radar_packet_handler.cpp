@@ -257,8 +257,8 @@ void RadarPacketHandler::processClientMessages(uint32_t unique_id) {
     // std::cout << "Create processClientMessage uniqueId "<< std::hex << uniqueId << std::endl;
 
     while (process_runnings.load()) {
-        std::vector<uint8_t> buffer;
-
+        std::vector<uint8_t> buffer(BUFFER_SIZE);
+        std::vector<uint8_t> buffer1(BUFFER_SIZE);
         {
             std::unique_lock<std::mutex> lock(client_queue_mutex_);
             client_queue_cvs_[unique_id].wait(lock, [this, &unique_id] { 
@@ -273,24 +273,25 @@ void RadarPacketHandler::processClientMessages(uint32_t unique_id) {
             }
 
             buffer = std::move(client_message_queues_[unique_id].front());
+            std::memcpy(buffer1.data(), buffer.data(), std::min(buffer.size(), buffer1.size())); 
             client_message_queues_[unique_id].pop();
         }
 
-        // std::cout << "processClientMessage uniqueId "<< std::hex << uniqueId << " unique_id " << Conversion::littleEndianToUint32(&buffer[OFFSET]) << std::endl;  
-
+        //  std::cout << "processClientMessage uniqueId "<< std::hex << uniqueId << " unique_id " << Conversion::littleEndianToUint32(&buffer[OFFSET]) << std::endl;  
+        // continue;
         uint32_t msg_type = Conversion::littleEndianToUint32(buffer.data());    
 
         switch (msg_type) {
             case HeaderType::HEADER_SCAN: {
                 message_parser_.parseRadarScanMsg(&buffer[OFFSET], radar_scan_msg, completeRadarScanMsg);
-                if (completeRadarScanMsg) {              
-                    radar_node_->publishRadarScanMsg(radar_scan_msg);
-                    radar_scan_msg.returns.clear();  
-                   // RCLCPP_INFO(rclcpp::get_logger("RadarPacketHandler"), "RadarScan frame_id %s", radar_scan_msg.header.frame_id.c_str());                    
-                }
+                // if (completeRadarScanMsg) {              
+                //     radar_node_->publishRadarScanMsg(radar_scan_msg);
+                //     radar_scan_msg.returns.clear();  
+                //    // RCLCPP_INFO(rclcpp::get_logger("RadarPacketHandler"), "RadarScan frame_id %s", radar_scan_msg.header.frame_id.c_str());                    
+                // }
 
                 if (point_cloud2_setting) {
-                    message_parser_.parsePointCloud2Msg(&buffer[OFFSET], radar_cloud_msg, completePointCloud2Msg);
+                    message_parser_.parsePointCloud2Msg(&buffer1[OFFSET], radar_cloud_msg, completePointCloud2Msg);
                     if (completePointCloud2Msg) {
                         radar_node_->publishRadarPointCloud2(radar_cloud_msg);
                         radar_cloud_msg.data.clear();  

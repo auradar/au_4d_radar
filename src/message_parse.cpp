@@ -43,6 +43,7 @@ MessageParser::MessageParser(device_au_radar_node* node)
     : radar_node_(node) { }
 
 void MessageParser::makeRadarPointCloud2Msg(uint8_t *p_buff, sensor_msgs::msg::PointCloud2& cloud_msg, bool& complete) {
+    std::lock_guard<std::mutex> lock(mtx_point_cloud2);
     uint32_t idx = 0;
     tsPacketHeader header = {};
     std::stringstream ss;
@@ -158,6 +159,7 @@ void MessageParser::makeRadarPointCloud2Msg(uint8_t *p_buff, sensor_msgs::msg::P
 }
 
 void MessageParser::makeRadarScanMsg(uint8_t *p_buff, radar_msgs::msg::RadarScan& radar_scan_msg, bool& complete) {
+    std::lock_guard<std::mutex> lock(mtx_radar_scan);
     uint32_t idx = 0;
     tsPacketHeader header = {};
     std::stringstream ss;
@@ -231,6 +233,7 @@ void MessageParser::makeRadarScanMsg(uint8_t *p_buff, radar_msgs::msg::RadarScan
 }
 
 void MessageParser::makeRadarTracksMsg(uint8_t *p_buff, radar_msgs::msg::RadarTracks &radar_tracks_msg, bool& complete) {
+    std::lock_guard<std::mutex> lock(mtx_radar_track);
     uint32_t idx = 0;
     tsPacketHeader header = {};
     std::stringstream ss;
@@ -276,17 +279,14 @@ void MessageParser::makeRadarTracksMsg(uint8_t *p_buff, radar_msgs::msg::RadarTr
 }
 
 void MessageParser::parsePointCloud2Msg(uint8_t *p_buff, sensor_msgs::msg::PointCloud2& radar_cloud_msg, bool& complete) {
-    std::lock_guard<std::mutex> lock(mtx_point_cloud2);
     makeRadarPointCloud2Msg(p_buff, radar_cloud_msg, complete);  
 }
 
 void MessageParser::parseRadarScanMsg(uint8_t *p_buff, radar_msgs::msg::RadarScan& radar_scan_msg, bool& complete) {
-    std::lock_guard<std::mutex> lock(mtx_radar_scan);
     makeRadarScanMsg(p_buff, radar_scan_msg, complete);  
 }
 
 void MessageParser::parseRadarTrackMsg(uint8_t *p_buff, radar_msgs::msg::RadarTracks& radar_tracks_msg, bool& complete) {
-    std::lock_guard<std::mutex> lock(mtx_radar_track);
     makeRadarTracksMsg(p_buff, radar_tracks_msg, complete);  
 }
 
