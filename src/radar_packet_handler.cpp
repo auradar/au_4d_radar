@@ -108,6 +108,14 @@ bool RadarPacketHandler::initialize() {
     server_addr_.sin_port        = htons(TARGET_PORT);
     server_addr_.sin_addr.s_addr = htonl(INADDR_ANY); 
 
+    int optval = 1;
+    if (setsockopt(rd_sockfd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval)) < 0) {    
+        RCLCPP_ERROR(rclcpp::get_logger("RadarPacketHandler"), "Set socket option SO_REUSEADDR failed");            
+        close(rd_sockfd);
+        rd_sockfd = -1;        
+        return false;
+    }
+
     if (bind(rd_sockfd, (struct sockaddr*)&server_addr_, sizeof(server_addr_)) < 0) {
         RCLCPP_ERROR(rclcpp::get_logger("RadarPacketHandler"), "Bind failed");         
         close(rd_sockfd);
@@ -143,6 +151,10 @@ void RadarPacketHandler::receiveMessages() {
         }
 
         uint32_t unique_id = Conversion::littleEndianToUint32(&buffer[OFFSET]);
+        if(message_parser_.checkValidFrameId(unique_id) == false) {
+            RCLCPP_INFO(rclcpp::get_logger("receiveMessages"), "Check Frame Id exist in system_info.yaml unique_id: %08x", unique_id);
+            continue;
+        }
 
         {
             std::lock_guard<std::mutex> lock(client_queue_mutex_);
@@ -220,6 +232,10 @@ void RadarPacketHandler::processMessages() {
         }
 
         uint32_t unique_id = Conversion::littleEndianToUint32(&buffer[OFFSET]);
+        if(message_parser_.checkValidFrameId(unique_id) == false) {
+            RCLCPP_INFO(rclcpp::get_logger("processMessages"), "Check Frame Id exist in system_info.yaml unique_id: %08x ", unique_id);
+            continue;
+        }
 
         {
             std::lock_guard<std::mutex> lock(client_queue_mutex_);

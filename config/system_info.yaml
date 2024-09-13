@@ -1,8 +1,8 @@
-client_hostname: raspberrypi
+client_hostname: auradar-eeeeeeee
 POINT_CLOUD2: true
 radars:
-  10000001: RADAR1
-  10000002: RADAR2
-  10000003: RADAR3
-  10000004: RADAR4
-  10000005: RADAR5
+  2a3dc654: RADAR1
+  273196c2: RADAR2
+  27c06058: RADAR3
+  0ade0aae: RADAR4
+  000ef7e5: RADAR5
