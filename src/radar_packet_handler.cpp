@@ -1,6 +1,6 @@
 
   /**
- * @file radar_data_handler.cpp
+ * @file radar_packet_handler.cpp
  * @author Antonio Ko(antonioko@au-sensor.com)
  * @brief Implementation of the radar_data_handler class for processing incoming radar data.
  * @version 1.1
@@ -28,7 +28,7 @@
 
 #define TARGET_PORT 7778
 #define BUFFER_SIZE 1460
-#define OFFSET 4 // offset for HeaderType
+#define MSG_TYPE_OFFSET 4 // offset for HeaderType
 const size_t MAX_QUEUE_SIZE = 1000;
 
 enum HeaderType {
@@ -41,7 +41,7 @@ namespace au_4d_radar
 {
 
 RadarPacketHandler::RadarPacketHandler(device_au_radar_node* node)
-    :  rd_sockfd(-1), radar_node_(node), receive_running(true), process_running(true) { }
+    :  rd_sockfd(-1), radar_node_(node), receive_running(true), process_running(true), process_runnings(true)  { }
 
 RadarPacketHandler::~RadarPacketHandler() {
     stop();
@@ -59,6 +59,7 @@ void RadarPacketHandler::start() {
 void RadarPacketHandler::stop() {
     receive_running.store(false);
     process_running.store(false);
+    process_runnings.store(false);
 
     if (rd_sockfd >= 0) {
         close(rd_sockfd);
@@ -150,7 +151,7 @@ void RadarPacketHandler::receiveMessages() {
             continue;
         }
 
-        uint32_t unique_id = Conversion::littleEndianToUint32(&buffer[OFFSET]);
+        uint32_t unique_id = Conversion::littleEndianToUint32(&buffer[MSG_TYPE_OFFSET]);
         if(message_parser_.checkValidFrameId(unique_id) == false) {
             RCLCPP_INFO(rclcpp::get_logger("receiveMessages"), "Check Frame Id exist in system_info.yaml unique_id: %08x", unique_id);
             continue;
@@ -231,7 +232,7 @@ void RadarPacketHandler::processMessages() {
             message_queue_.pop();
         }
 
-        uint32_t unique_id = Conversion::littleEndianToUint32(&buffer[OFFSET]);
+        uint32_t unique_id = Conversion::littleEndianToUint32(&buffer[MSG_TYPE_OFFSET]);
         if(message_parser_.checkValidFrameId(unique_id) == false) {
             RCLCPP_INFO(rclcpp::get_logger("processMessages"), "Check Frame Id exist in system_info.yaml unique_id: %08x ", unique_id);
             continue;
@@ -262,16 +263,16 @@ void RadarPacketHandler::processClientMessages(uint32_t unique_id) {
     sensor_msgs::msg::PointCloud2 radar_cloud_msg;
     radar_msgs::msg::RadarTracks radar_tracks_msg;
 
-    while (process_running.load()) {
+    while (process_runnings.load()) {
         std::vector<uint8_t> buffer(BUFFER_SIZE);
 
         {
             std::unique_lock<std::mutex> lock(client_queue_mutex_);
             client_queue_cvs_[unique_id].wait(lock, [this, &unique_id] { 
-                return !client_message_queues_[unique_id].empty() || !process_running.load(); 
+                return !client_message_queues_[unique_id].empty() || !process_runnings.load(); 
             });
 
-            if (!process_running.load()) {
+            if (!process_runnings.load()) {
                 while (!client_message_queues_[unique_id].empty()) {
                     client_message_queues_[unique_id].pop();
                 }          
@@ -289,14 +290,14 @@ void RadarPacketHandler::processClientMessages(uint32_t unique_id) {
             {
                 bool completeRadarScanMsg   = false;
                 bool completePointCloud2Msg = false;
-                message_parser_.parseRadarScanMsg(&buffer[OFFSET], radar_scan_msg, completeRadarScanMsg);
+                message_parser_.parseRadarScanMsg(&buffer[MSG_TYPE_OFFSET], radar_scan_msg, completeRadarScanMsg);
                 if (completeRadarScanMsg) {
                     radar_node_->publishRadarScanMsg(radar_scan_msg);
                     radar_scan_msg.returns.clear();
                 }
 
                 if (point_cloud2_setting.load()) {
-                    message_parser_.parsePointCloud2Msg(&buffer[OFFSET], radar_cloud_msg, completePointCloud2Msg);
+                    message_parser_.parsePointCloud2Msg(&buffer[MSG_TYPE_OFFSET], radar_cloud_msg, completePointCloud2Msg);
                     if (completePointCloud2Msg) {
                         radar_node_->publishRadarPointCloud2(radar_cloud_msg);
                         radar_cloud_msg.data.clear();
@@ -308,7 +309,7 @@ void RadarPacketHandler::processClientMessages(uint32_t unique_id) {
             case HeaderType::HEADER_TRACK: 
             {
                 bool completeRadarTrackMsg = false;
-                message_parser_.parseRadarTrackMsg(&buffer[OFFSET], radar_tracks_msg, completeRadarTrackMsg);
+                message_parser_.parseRadarTrackMsg(&buffer[MSG_TYPE_OFFSET], radar_tracks_msg, completeRadarTrackMsg);
                 if (completeRadarTrackMsg) {
                     radar_node_->publishRadarTrackMsg(radar_tracks_msg);
                     radar_tracks_msg.tracks.clear();

@@ -37,14 +37,14 @@
 Message Format
 MessageType (4 bytes) + CRC32 (4 bytes) + Payload Length (2 bytes) + Payload Body
 MessageType: 4 bytes
-CRC32: 4 bytes (playload_body only, not include playload_length) 
-playload_length: 2 bytes 
-playload_body: flatcc_builde
+CRC32: 4 bytes (payload_body only, not include payload_length) 
+payload_length: 2 bytes 
+payload_body: flatbuffers
 */
 
 #define MSG_TYPE_OFFSET 4  // offset for MessageType(4bytes)
 #define PAYLOAD_LEN_OFFSET 8 // offset header(4 bytes) + CRC32(4 bytes)
-#define PAYLOAD_OFFSET 10  // offset header(4 bytes) + CRC32(4 bytes) + playload_length(2 bytes)
+#define PAYLOAD_OFFSET 10  // offset header(4 bytes) + CRC32(4 bytes) + payload_length(2 bytes)
  
 
 enum MessageType {
@@ -150,15 +150,13 @@ void Heartbeat::processRequestConnection(const uint8_t* buffer, const std::strin
 
         size_t buff_size = builder.GetSize() + PAYLOAD_OFFSET;
         std::vector<uint8_t> buff(buff_size);
-
-        Conversion::uint32ToBigEndian(MessageType::RESPONSE_CONNECTION, buff.data());
+        // MessageType (4 bytes) + CRC32 (4 bytes) + Payload Length (2 bytes) + Payload Body
+        Conversion::uint32ToBigEndian(MessageType::RESPONSE_CONNECTION, buff.data()); 
         uint32_t crc = crc32(builder.GetBufferPointer(), builder.GetSize());
-        Conversion::uint32ToBigEndian(crc, &buff[MSG_TYPE_OFFSET]);
+        Conversion::uint32ToBigEndian(crc, &buff[MSG_TYPE_OFFSET]); 
         Conversion::uint16ToBigEndian(static_cast<uint16_t>(builder.GetSize()), &buff[PAYLOAD_LEN_OFFSET]);
-
         memcpy(&buff[PAYLOAD_OFFSET], builder.GetBufferPointer(), builder.GetSize());
 
-        // Send response
         if (inet_pton(AF_INET, receivedIp.c_str(), &send_server_addr.sin_addr) <= 0) {
             RCLCPP_ERROR(rclcpp::get_logger("Heartbeat"), "Invalid IP address format: %s", receivedIp.c_str());
             send_server_addr.sin_addr.s_addr = INADDR_BROADCAST;
@@ -219,16 +217,16 @@ void Heartbeat::handleClientMessages() {
             continue;
         }
 
+        uint16_t payloadLength = Conversion::bigEndianToUint16(&buffer[PAYLOAD_LEN_OFFSET]);
+        if (payloadLength != n - PAYLOAD_OFFSET) {
+            RCLCPP_ERROR(rclcpp::get_logger("Heartbeat"), "Payload length mismatch");                 
+            continue;
+        }
+
         uint32_t receivedCrc32 = Conversion::bigEndianToUint32(&buffer[MSG_TYPE_OFFSET]);
         uint32_t calculatedCrc32 = crc32(&buffer[PAYLOAD_OFFSET], n - PAYLOAD_OFFSET);
         if (receivedCrc32 != calculatedCrc32) {
             RCLCPP_ERROR(rclcpp::get_logger("Heartbeat"), "CRC32 mismatch");                 
-            continue;
-        }
-
-        uint16_t payloadLength = Conversion::bigEndianToUint16(&buffer[PAYLOAD_LEN_OFFSET]);
-        if (payloadLength != n - PAYLOAD_OFFSET) {
-            RCLCPP_ERROR(rclcpp::get_logger("Heartbeat"), "Payload length mismatch");                 
             continue;
         }
 
