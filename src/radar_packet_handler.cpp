@@ -153,7 +153,7 @@ void RadarPacketHandler::receiveMessages() {
 
         uint32_t unique_id = Conversion::littleEndianToUint32(&buffer[MSG_TYPE_OFFSET]);
         if(message_parser_.checkValidFrameId(unique_id) == false) {
-            RCLCPP_INFO(rclcpp::get_logger("receiveMessages"), "Check Frame Id exist in system_info.yaml unique_id: %08x", unique_id);
+            RCLCPP_INFO(rclcpp::get_logger("receiveMessages"), "FrameId not exist in system_info.yaml unique_id: %08x", unique_id);
             continue;
         }
 
@@ -200,6 +200,12 @@ void RadarPacketHandler::receiveMessagesTwoQueues() {
             continue;
         }
 
+        uint32_t unique_id = Conversion::littleEndianToUint32(&buffer[MSG_TYPE_OFFSET]);
+        if(message_parser_.checkValidFrameId(unique_id) == false) {
+            RCLCPP_INFO(rclcpp::get_logger("receiveMessagesTwoQueues"), "FrameId not exist in system_info.yaml unique_id: %08x ", unique_id);
+            continue;
+        }
+
         {
             std::lock_guard<std::mutex> lock(queue_mutex_);
             if (message_queue_.size() >= MAX_QUEUE_SIZE) {
@@ -233,10 +239,10 @@ void RadarPacketHandler::processMessages() {
         }
 
         uint32_t unique_id = Conversion::littleEndianToUint32(&buffer[MSG_TYPE_OFFSET]);
-        if(message_parser_.checkValidFrameId(unique_id) == false) {
-            RCLCPP_INFO(rclcpp::get_logger("processMessages"), "Check Frame Id exist in system_info.yaml unique_id: %08x ", unique_id);
-            continue;
-        }
+        // if(message_parser_.checkValidFrameId(unique_id) == false) {
+        //     RCLCPP_INFO(rclcpp::get_logger("processMessages"), "FrameId not exist in system_info.yaml unique_id: %08x ", unique_id);
+        //     continue;
+        // }
 
         {
             std::lock_guard<std::mutex> lock(client_queue_mutex_);

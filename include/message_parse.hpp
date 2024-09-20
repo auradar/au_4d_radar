@@ -1,6 +1,6 @@
   /**
  * @file message_parse.hpp
- * @author kisoo.kim@au-sensor.com, antonioko@au-sensor.com
+ * @author antonioko@au-sensor.com, kisoo.kim@au-sensor.com
  * @brief Implementation of the MessageParser class for parsing radar data.
  * @version 1.0
  * @date 2024-08-23
