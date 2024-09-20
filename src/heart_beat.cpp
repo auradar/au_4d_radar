@@ -206,11 +206,11 @@ void Heartbeat::handleClientMessages() {
         if (n < 0) {
             RCLCPP_ERROR(rclcpp::get_logger("Heartbeat"), "recvfrom failed");                                         
             continue;
-        } else if (n > BUFFER_SIZE) {
+        } else if (n < 10 || n > BUFFER_SIZE) {
             RCLCPP_ERROR(rclcpp::get_logger("Heartbeat"), "message size exceeds buffer size");                 
             continue;
         }
-
+        // MessageType (4 bytes) + CRC32 (4 bytes) + Payload Length (2 bytes) + Payload Body
         uint32_t messageType = Conversion::bigEndianToUint32(buffer);
         if (messageType == 0) {
             RCLCPP_ERROR(rclcpp::get_logger("Heartbeat"), "Invalid MessageType received");                 
@@ -224,7 +224,7 @@ void Heartbeat::handleClientMessages() {
         }
 
         uint32_t receivedCrc32 = Conversion::bigEndianToUint32(&buffer[MSG_TYPE_OFFSET]);
-        uint32_t calculatedCrc32 = crc32(&buffer[PAYLOAD_OFFSET], n - PAYLOAD_OFFSET);
+        uint32_t calculatedCrc32 = crc32(&buffer[PAYLOAD_OFFSET], payloadLength);
         if (receivedCrc32 != calculatedCrc32) {
             RCLCPP_ERROR(rclcpp::get_logger("Heartbeat"), "CRC32 mismatch");                 
             continue;
