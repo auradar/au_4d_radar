@@ -1,6 +1,6 @@
   /**
  * @file au_4d_radar.hpp
- * @author kisoo.kim@au-sensor.com, antonioko@au-sensor.com
+ * @author antonioko@au-sensor.com, kisoo.kim@au-sensor.com
  * @version 1.0
  * @date 2024-09-11
  * 

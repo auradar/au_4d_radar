@@ -240,7 +240,7 @@ void Heartbeat::handleClientMessages() {
                 processHeartbeatMessage(buffer, receivedIp);
                 break;
             default:             
-                RCLCPP_INFO(rclcpp::get_logger("Heartbeat"), "Unknown message type: %u receivedIp: %s", messageType, receivedIp.c_str());
+                RCLCPP_INFO(rclcpp::get_logger("Heartbeat"), "Unknown message type: %08x receivedIp: %s", messageType, receivedIp.c_str());
                 break;
         }
     }
