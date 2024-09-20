@@ -1,5 +1,5 @@
   /**
- * @file radar_packet_handler.hpp
+ * @file radar_data_handler.hpp
  * @author Antonio Ko(antonioko@au-sensor.com)
  * @brief Implementation of the radar_data_handler class for processing incoming radar data.
  * @version 1.1

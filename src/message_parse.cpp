@@ -47,27 +47,13 @@ void MessageParser::init() {
 }
 
 std::string MessageParser::getFrameId(uint32_t radar_id) {
-    std::lock_guard<std::recursive_mutex> lock(parser_map_mutex_);
+    std::lock_guard<std::recursive_mutex> lock(radar_map_mutex_);
     auto it = radarsMap_.find(radar_id);
     if (it != radarsMap_.end()) {
         return it->second;  
     } else {
         return ""; 
     }
-}
-
-bool MessageParser::checkValidFrameId(uint32_t radar_id) {
-#if 1
-    std::lock_guard<std::recursive_mutex> lock(parser_map_mutex_);   
-    auto it = radarsMap_.find(radar_id);
-    if (it != radarsMap_.end()) {
-        return true;  
-    } else {
-        return false; 
-    }
-#else  // not check    
-        return true; 
-#endif    
 }
 
 void MessageParser::makeRadarPointCloud2Msg(uint8_t *p_buff, sensor_msgs::msg::PointCloud2& cloud_msg, bool& complete) {
@@ -106,8 +92,7 @@ void MessageParser::makeRadarPointCloud2Msg(uint8_t *p_buff, sensor_msgs::msg::P
 
       // https://github.com/ros2/common_interfaces/blob/rolling/std_msgs/msg/Header.msg
       //sequence_id_ = header.ui32FN; 
-    // ss << std::hex << std::setw(8) << std::setfill('0') << header.ui32UID; 
-    // frame_id_ = YamlParser::readFrameId(ss.str());    
+    
     frame_id_ = getFrameId(header.ui32UID);
     if(frame_id_.empty()) {
         ss << std::hex << std::setw(8) << std::setfill('0') << header.ui32UID;     
@@ -225,9 +210,7 @@ void MessageParser::makeRadarScanMsg(uint8_t *p_buff, radar_msgs::msg::RadarScan
 
      // https://github.com/ros2/common_interfaces/blob/rolling/std_msgs/msg/Header.msg
      //sequence_id_ = header.ui32FN; 
-
-    // ss << std::hex << std::setw(8) << std::setfill('0') << header.ui32UID; 
-    // frame_id_ = YamlParser::readFrameId(ss.str());    
+    
     frame_id_ = getFrameId(header.ui32UID);
     if(frame_id_.empty()) {
         ss << std::hex << std::setw(8) << std::setfill('0') << header.ui32UID;     

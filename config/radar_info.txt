@@ -2,20 +2,19 @@ client_hostname: raspberrypi
 client_hostname: orangepi5
 client_hostname: auradar-eeeeeeee
     
-
   # BTS 5EA
-  9c281337: RADAR FRONT  
-  05d9f6e4: RADAR FRONT RIGHT  
-  5ff85500: RADAR REAR RIGHT
-  c0a4ab10: RADAR REAR LEFT
-  610ddb0e: RADAR FRONT LEFT
+  9c281337: RADAR_FRONT  
+  05d9f6e4: RADAR_FRONT_RIGHT  
+  5ff85500: RADAR_REAR_RIGHT
+  c0a4ab10: RADAR_REAR_LEFT
+  610ddb0e: RADAR_FRONT_LEFT
 
   # LG-E
-  0dd98aa5: RADAR FRONT
-  2812b707: RADAR FRONT RIGHT
-  2d12af50: RADAR REAR RIGHT
-  564d6b80: RADAR REAR LEFT
-  2f7e83f9: RADAR FRONT LEFT
+  0dd98aa5: RADAR_FRONT
+  2812b707: RADAR_FRONT_RIGHT
+  2d12af50: RADAR_REAR_RIGHT
+  564d6b80: RADAR_REAR_LEFT
+  2f7e83f9: RADAR_FRONT_LEFT
 
   # Test
   dabcdef0: RADAR0
@@ -26,8 +25,9 @@ client_hostname: auradar-eeeeeeee
   dabcdef5: RADAR5
 
   # Test 2
-  2a3dc654: RADAR1
-  273196c2: RADAR2
-  27c06058: RADAR3
-  0ade0aae: RADAR4
+  dabcdef0: RADAR0
+  27c06058: RADAR1
+  0ade0aae: RADAR2
+  2a3dc654: RADAR3
+  273196c2: RADAR4
   000ef7e5: RADAR5
