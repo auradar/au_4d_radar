@@ -2,8 +2,13 @@ client_hostname: auradar-eeeeeeee
 POINT_CLOUD2: true
 radars:
   dabcdef0: RADAR0
-  27c06058: RADAR1
-  0ade0aae: RADAR2
-  2a3dc654: RADAR3
-  273196c2: RADAR4
-  000ef7e5: RADAR5
+  dabcdef1: RADAR1
+  dabcdef2: RADAR2
+  dabcdef3: RADAR3
+  dabcdef4: RADAR4
+  dabcdef5: RADAR5
+  27c06058: RADAR6
+  0ade0aae: RADAR7
+  2a3dc654: RADAR8
+  273196c2: RADAR9
+  000ef7e5: RADAR0  

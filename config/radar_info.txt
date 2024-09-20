@@ -18,7 +18,7 @@ client_hostname: auradar-eeeeeeee
 
   # Test
   dabcdef0: RADAR0
-  dabcdef1: RADAR0
+  dabcdef1: RADAR1
   dabcdef2: RADAR2
   dabcdef3: RADAR3
   dabcdef4: RADAR4

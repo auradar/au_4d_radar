@@ -136,7 +136,7 @@ void RadarPacketHandler::receiveMessages() {
             }
             usleep(1000);  
             continue;
-        } else if (n >= BUFFER_SIZE) {
+        } else if (n < 60 || n >= BUFFER_SIZE) {
             RCLCPP_INFO(rclcpp::get_logger("RadarPacketHandler"), "Message size: %d bytes", n);
             continue;
         }
@@ -181,8 +181,8 @@ void RadarPacketHandler::receiveMessagesTwoQueues() {
             }
             usleep(1000);
             continue;
-        } else if (n >= BUFFER_SIZE) {
-            RCLCPP_INFO(rclcpp::get_logger("RadarPacketHandler"), "Message size: %d bytes", n);
+        } else if (n < 60 || n >= BUFFER_SIZE) {
+            RCLCPP_INFO(rclcpp::get_logger("RadarPacketHandler"), "Message size: %d bytes wrong !!!", n);
             continue;
         }
 
