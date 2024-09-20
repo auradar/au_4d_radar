@@ -92,10 +92,11 @@ void MessageParser::makeRadarPointCloud2Msg(uint8_t *p_buff, sensor_msgs::msg::P
 
       // https://github.com/ros2/common_interfaces/blob/rolling/std_msgs/msg/Header.msg
       //sequence_id_ = header.ui32FN; 
-    
-    frame_id_ = getFrameId(header.ui32UID);
+    ss << std::hex << std::setw(8) << std::setfill('0') << header.ui32UID; 
+    frame_id_ = YamlParser::readFrameId(ss.str());        
+    // frame_id_ = getFrameId(header.ui32UID);
     if(frame_id_.empty()) {
-        ss << std::hex << std::setw(8) << std::setfill('0') << header.ui32UID;     
+        // ss << std::hex << std::setw(8) << std::setfill('0') << header.ui32UID;     
         frame_id_ = ss.str();
     }
 
@@ -210,10 +211,11 @@ void MessageParser::makeRadarScanMsg(uint8_t *p_buff, radar_msgs::msg::RadarScan
 
      // https://github.com/ros2/common_interfaces/blob/rolling/std_msgs/msg/Header.msg
      //sequence_id_ = header.ui32FN; 
-    
-    frame_id_ = getFrameId(header.ui32UID);
+    ss << std::hex << std::setw(8) << std::setfill('0') << header.ui32UID; 
+    frame_id_ = YamlParser::readFrameId(ss.str());        
+    // frame_id_ = getFrameId(header.ui32UID);
     if(frame_id_.empty()) {
-        ss << std::hex << std::setw(8) << std::setfill('0') << header.ui32UID;     
+        // ss << std::hex << std::setw(8) << std::setfill('0') << header.ui32UID;     
         frame_id_ = ss.str();
     }
 
