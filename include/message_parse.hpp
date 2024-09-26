@@ -1,12 +1,12 @@
-  /**
+/**
  * @file message_parse.hpp
  * @author antonioko@au-sensor.com, kisoo.kim@au-sensor.com
  * @brief Implementation of the MessageParser class for parsing radar data.
  * @version 1.0
  * @date 2024-08-23
- * 
+ *
  * @copyright Copyright AU (c) 2024
- * 
+ *
  */
 
 #ifndef MESSAGE_PARSE_HPP
@@ -40,7 +40,7 @@ namespace au_4d_radar
         void parseRadarScanMsg(uint8_t *p_buff, radar_msgs::msg::RadarScan& radar_scan_msg, bool& complete);
         void parseRadarTrackMsg(uint8_t *p_buff, radar_msgs::msg::RadarTracks& radar_tracks_msg, bool& complete);
         bool checkValidFrameId(uint32_t radar_id);
-        
+
     private:
         void makeRadarPointCloud2Msg(uint8_t *p_buff, sensor_msgs::msg::PointCloud2& cloud_msg, bool& complete); 
         void makeRadarScanMsg(uint8_t *p_buff, radar_msgs::msg::RadarScan& radar_scan_msg, bool& complete);
@@ -53,7 +53,7 @@ namespace au_4d_radar
         uint32_t stamp_tv_nsec_;
         std::mutex mtx_point_cloud2;
         std::mutex mtx_radar_scan;
-        std::mutex mtx_radar_track;                
+        std::mutex mtx_radar_track;
         std::recursive_mutex parser_map_mutex_;
         std::unordered_map<uint32_t, std::string> radarsMap_;
 

@@ -34,7 +34,7 @@ namespace au_4d_radar
 
         void start();
         void stop();
-   
+
         std::string getClientIP();
         bool connectionStatus();
 
@@ -44,9 +44,9 @@ namespace au_4d_radar
         bool isValidIPAddress(const std::string& ip);
         std::string inAddrToString(in_addr_t addr);
         void handleClientMessages();
-        void setClientIp(const std::string& newIp);     
+        void setClientIp(const std::string& newIp);
         void processRequestConnection(const uint8_t* buffer, const std::string& receivedIp, socklen_t len);
-        void processHeartbeatMessage(const uint8_t* buffer, const std::string& receivedIp);                
+        void processHeartbeatMessage(const uint8_t* buffer, const std::string& receivedIp);
 
         int recv_sockfd;
         int send_sockfd;
@@ -56,10 +56,10 @@ namespace au_4d_radar
         std::thread receiverThread;
         std::mutex mtx;
         std::atomic<bool> running;
-        std::atomic<bool> connected;    
+        std::atomic<bool> connected;
         std::string configFilePath;
 
-       flatbuffers::FlatBufferBuilder builder;                 
+        flatbuffers::FlatBufferBuilder builder;
 
         device_au_radar_node* radar_node_;
     };

@@ -56,7 +56,7 @@ public:
     static inline float convertToFloat(const uint8_t* buffer) {
         return *((float *)buffer);
     }
-    
+
 private:
     static std::mutex bufferMutex;
 };

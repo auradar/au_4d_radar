@@ -4,9 +4,9 @@
  * @brief Supports automatic connection and communication functions without having to set the IP of each component in a local network environment
  * @version 1.0
  * @date 2024-08-23
- * 
+ *
  * @copyright Copyright AU (c) 2024
- * 
+ *
  */
 
 #include <iostream>
@@ -31,21 +31,21 @@
 
 #define RECEIVE_PORT 59152 // Users can use UDP ports in the range 49152-65535.
 #define SEND_PORT 59153
-#define BUFFER_SIZE 1460 
+#define BUFFER_SIZE 1460
 
 /*
 Message Format
 MessageType (4 bytes) + CRC32 (4 bytes) + Payload Length (2 bytes) + Payload Body
 MessageType: 4 bytes
-CRC32: 4 bytes (payload_body only, not include payload_length) 
-payload_length: 2 bytes 
+CRC32: 4 bytes (payload_body only, not include payload_length)
+payload_length: 2 bytes
 payload_body: flatbuffers
 */
 
 #define MSG_TYPE_OFFSET 4  // offset for MessageType(4bytes)
 #define PAYLOAD_LEN_OFFSET 8 // offset header(4 bytes) + CRC32(4 bytes)
 #define PAYLOAD_OFFSET 10  // offset header(4 bytes) + CRC32(4 bytes) + payload_length(2 bytes)
- 
+
 
 enum MessageType {
     REQUEST_CONNECTION  = 0x41551001,
@@ -58,12 +58,12 @@ namespace au_4d_radar
 {
 std::string Heartbeat::clientIp = DEFAULT_IP;
 
-Heartbeat::Heartbeat(device_au_radar_node* node) 
+Heartbeat::Heartbeat(device_au_radar_node* node)
     : recv_sockfd(-1), send_sockfd(-1), running(true), connected(false), radar_node_(node) {}
 
-Heartbeat::~Heartbeat() { 
-    // std::cerr << "Heartbeat::~Heartbeat()" << std::endl;         
-    stop(); 
+Heartbeat::~Heartbeat() {
+    // std::cerr << "Heartbeat::~Heartbeat()" << std::endl;
+    stop();
 }
 
 void Heartbeat::start() {
@@ -88,28 +88,28 @@ void Heartbeat::stop() {
         receiverThread.join();
     }
 
-    // std::cerr << "Heartbeat::stop" << std::endl;        
-}  
+    // std::cerr << "Heartbeat::stop" << std::endl;
+}
 
 bool Heartbeat::initialize() {
     clientHostname = YamlParser::readHostname("client_hostname");
 
     recv_sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     if (recv_sockfd < 0) {
-        RCLCPP_ERROR(rclcpp::get_logger("Heartbeat"), "Socket creation failed");        
+        RCLCPP_ERROR(rclcpp::get_logger("Heartbeat"), "Socket creation failed");
         return false;
     }
 
     int optval = 1;
-    if (setsockopt(recv_sockfd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval)) < 0) {    
-        RCLCPP_ERROR(rclcpp::get_logger("Heartbeat"), "Set socket option SO_REUSEADDR failed");            
+    if (setsockopt(recv_sockfd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval)) < 0) {
+        RCLCPP_ERROR(rclcpp::get_logger("Heartbeat"), "Set socket option SO_REUSEADDR failed");
         close(recv_sockfd);
         return false;
     }
 
     send_sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     if (send_sockfd < 0) {
-        RCLCPP_ERROR(rclcpp::get_logger("Heartbeat"), "Socket creation failed");                 
+        RCLCPP_ERROR(rclcpp::get_logger("Heartbeat"), "Socket creation failed");
         close(recv_sockfd);
         return false;
     }
@@ -122,10 +122,10 @@ bool Heartbeat::initialize() {
     memset(&send_server_addr, 0, sizeof(send_server_addr));
     send_server_addr.sin_family      = AF_INET;
     send_server_addr.sin_port        = htons(SEND_PORT);
-    send_server_addr.sin_addr.s_addr = INADDR_BROADCAST; 
+    send_server_addr.sin_addr.s_addr = INADDR_BROADCAST;
 
     if (bind(recv_sockfd, (const struct sockaddr *)&recv_server_addr, sizeof(recv_server_addr)) < 0) {
-        RCLCPP_ERROR(rclcpp::get_logger("Heartbeat"), "Bind failed");         
+        RCLCPP_ERROR(rclcpp::get_logger("Heartbeat"), "Bind failed");
         close(recv_sockfd);
         close(send_sockfd);
         return false;
@@ -151,9 +151,9 @@ void Heartbeat::processRequestConnection(const uint8_t* buffer, const std::strin
         size_t buff_size = builder.GetSize() + PAYLOAD_OFFSET;
         std::vector<uint8_t> buff(buff_size);
         // MessageType (4 bytes) + CRC32 (4 bytes) + Payload Length (2 bytes) + Payload Body
-        Conversion::uint32ToBigEndian(MessageType::RESPONSE_CONNECTION, buff.data()); 
+        Conversion::uint32ToBigEndian(MessageType::RESPONSE_CONNECTION, buff.data());
         uint32_t crc = crc32(builder.GetBufferPointer(), builder.GetSize());
-        Conversion::uint32ToBigEndian(crc, &buff[MSG_TYPE_OFFSET]); 
+        Conversion::uint32ToBigEndian(crc, &buff[MSG_TYPE_OFFSET]);
         Conversion::uint16ToBigEndian(static_cast<uint16_t>(builder.GetSize()), &buff[PAYLOAD_LEN_OFFSET]);
         memcpy(&buff[PAYLOAD_OFFSET], builder.GetBufferPointer(), builder.GetSize());
 
@@ -164,6 +164,9 @@ void Heartbeat::processRequestConnection(const uint8_t* buffer, const std::strin
 
         sendto(send_sockfd, buff.data(), buff_size, 0, (const struct sockaddr *)&send_server_addr, len);
         RCLCPP_INFO(rclcpp::get_logger("Heartbeat"), "Response for request connection sent to: %s receivedHostname: %s", receivedIp.c_str(), receivedHostname.c_str());
+        radar_node_->radar_handler_.sendMessages("SS", receivedIp.c_str());
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+        radar_node_->radar_handler_.sendMessages("SS", receivedIp.c_str());
     } else {
         RCLCPP_INFO(rclcpp::get_logger("Heartbeat"), "processRequestConnection() Hostname does not match receivedHostname: %s", receivedHostname.c_str());
     }
@@ -172,13 +175,13 @@ void Heartbeat::processRequestConnection(const uint8_t* buffer, const std::strin
 void Heartbeat::processHeartbeatMessage(const uint8_t* buffer, const std::string& receivedIp) {
     auto Heartbeat = AU::GetHeartbeat(&buffer[PAYLOAD_OFFSET]);
     if (!Heartbeat) {
-        RCLCPP_ERROR(rclcpp::get_logger("Heartbeat"), "Failed to decode Heartbeat message.");     
+        RCLCPP_ERROR(rclcpp::get_logger("Heartbeat"), "Failed to decode Heartbeat message.");
         return;
     }
 
     std::string HeartbeatHostname = Heartbeat->client_hostname()->str();
     if (clientHostname.starts_with(HeartbeatHostname.substr(0, 7))) {
-            mon_msgs::msg::RadarHealth radar_health_msg;            
+            mon_msgs::msg::RadarHealth radar_health_msg;
             time_t raw_time = static_cast<time_t>(Heartbeat->timestamp());
             struct tm* timeinfo = localtime(&raw_time);
             char time_str[64];
@@ -189,11 +192,10 @@ void Heartbeat::processHeartbeatMessage(const uint8_t* buffer, const std::string
             radar_health_msg.status = Heartbeat->status();
             radar_health_msg.tv_sec = Heartbeat->timestamp();
 
-            // RCLCPP_INFO(rclcpp::get_logger("Heartbeat"), "client_hostname : %s status: %u tv_sec: %u", 
-            //             radar_health_msg.client_hostname.c_str(), radar_health_msg.status, radar_health_msg.tv_sec);  
+            // RCLCPP_INFO(rclcpp::get_logger("Heartbeat"), "client_hostname : %s status: %u tv_sec: %u",
+            //             radar_health_msg.client_hostname.c_str(), radar_health_msg.status, radar_health_msg.tv_sec);
 
-            radar_node_->publishHeartbeat(radar_health_msg);  
-            // radar_node_->radar_handler_.sendMessages("SS", receivedIp.c_str()); 
+            radar_node_->publishHeartbeat(radar_health_msg);
     }
 }
 
@@ -204,42 +206,42 @@ void Heartbeat::handleClientMessages() {
         socklen_t len = sizeof(recv_server_addr);
         int n = recvfrom(recv_sockfd, buffer, sizeof(buffer), 0, (struct sockaddr *)&recv_server_addr, &len);
         if (n < 0) {
-            RCLCPP_ERROR(rclcpp::get_logger("Heartbeat"), "recvfrom failed");                                         
+            RCLCPP_ERROR(rclcpp::get_logger("Heartbeat"), "recvfrom failed");
             continue;
         } else if (n < 10 || n > BUFFER_SIZE) {
-            RCLCPP_ERROR(rclcpp::get_logger("Heartbeat"), "message size exceeds buffer size");                 
+            RCLCPP_ERROR(rclcpp::get_logger("Heartbeat"), "message size exceeds buffer size");
             continue;
         }
         // MessageType (4 bytes) + CRC32 (4 bytes) + Payload Length (2 bytes) + Payload Body
         uint32_t messageType = Conversion::bigEndianToUint32(buffer);
         if (messageType == 0) {
-            RCLCPP_ERROR(rclcpp::get_logger("Heartbeat"), "Invalid MessageType received");                 
+            RCLCPP_ERROR(rclcpp::get_logger("Heartbeat"), "Invalid MessageType received");
             continue;
         }
 
         uint16_t payloadLength = Conversion::bigEndianToUint16(&buffer[PAYLOAD_LEN_OFFSET]);
         if (payloadLength != n - PAYLOAD_OFFSET) {
-            RCLCPP_ERROR(rclcpp::get_logger("Heartbeat"), "Payload length mismatch");                 
+            RCLCPP_ERROR(rclcpp::get_logger("Heartbeat"), "Payload length mismatch");
             continue;
         }
 
         uint32_t receivedCrc32 = Conversion::bigEndianToUint32(&buffer[MSG_TYPE_OFFSET]);
         uint32_t calculatedCrc32 = crc32(&buffer[PAYLOAD_OFFSET], payloadLength);
         if (receivedCrc32 != calculatedCrc32) {
-            RCLCPP_ERROR(rclcpp::get_logger("Heartbeat"), "CRC32 mismatch");                 
+            RCLCPP_ERROR(rclcpp::get_logger("Heartbeat"), "CRC32 mismatch");
             continue;
         }
 
         std::string receivedIp = inAddrToString(recv_server_addr.sin_addr.s_addr);
 
         switch (messageType) {
-            case MessageType::REQUEST_CONNECTION: 
+            case MessageType::REQUEST_CONNECTION:
                 processRequestConnection(buffer, receivedIp, len);
                 break;
-            case MessageType::HEARTBEAT_MESSAGE: 
+            case MessageType::HEARTBEAT_MESSAGE:
                 processHeartbeatMessage(buffer, receivedIp);
                 break;
-            default:             
+            default:
                 RCLCPP_INFO(rclcpp::get_logger("Heartbeat"), "Unknown message type: %08x receivedIp: %s", messageType, receivedIp.c_str());
                 break;
         }
@@ -259,9 +261,9 @@ std::string Heartbeat::inAddrToString(in_addr_t addr) {
 
 void Heartbeat::setClientIp(const std::string& newIp) {
     if (clientIp != newIp) {
-        clientIp = newIp;   
-        connected = true;                   
-        //RCLCPP_INFO(rclcpp::get_logger("Heartbeat"), "Client IP set to: %s", clientIp.c_str());            
+        clientIp = newIp;
+        connected = true;
+        //RCLCPP_INFO(rclcpp::get_logger("Heartbeat"), "Client IP set to: %s", clientIp.c_str());
     }
 }
 

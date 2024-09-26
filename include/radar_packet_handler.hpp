@@ -1,12 +1,12 @@
-  /**
+/**
  * @file radar_packet_handler.hpp
  * @author Antonio Ko(antonioko@au-sensor.com)
  * @brief Implementation of the radar_data_handler class for processing incoming radar data.
  * @version 1.1
  * @date 2024-09-05
- * 
+ *
  * @copyright Copyright AU (c) 2024
- * 
+ *
  */
 
 #ifndef RADAR_PACKET_HANDLER_INCLUDE_H
@@ -26,8 +26,8 @@
 #include <sys/socket.h>
 #include <map>
 
-#include "message_parse.hpp" 
-// #include "heart_beat.hpp"  
+#include "message_parse.hpp"
+// #include "heart_beat.hpp"
 
 namespace au_4d_radar
 {
@@ -47,15 +47,15 @@ namespace au_4d_radar
     private:
         bool initialize();
         void receiveMessages();
-        void receiveMessagesTwoQueues();        
-        void processMessages();        
+        void receiveMessagesTwoQueues();
+        void processMessages();
         void processClientMessages(uint32_t unique_id);
 
         int rd_sockfd;
         device_au_radar_node* radar_node_;
         std::atomic<bool> receive_running;
-        std::atomic<bool> process_running;        
-        std::atomic<bool> process_runnings;            
+        std::atomic<bool> process_running;
+        std::atomic<bool> process_runnings;
         std::atomic<bool> point_cloud2_setting;
 
         std::thread receive_thread_;
