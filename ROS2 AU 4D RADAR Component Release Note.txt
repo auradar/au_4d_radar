@@ -1,0 +1,21 @@
+v1.0
+- Support 1:1 communication between RADAR Sensor and ROS2 RADAR Component
+- 1st Field Integration Completed
+
+v2.0
+- Support N:1 communication between RADAR Sensor and ROS2 RADAR Component
+- Support auto Connection between RADAR Sensors and RADAR Component
+- Support ros2 publish for 1 packet unit
+- Support Frame ID Naming convention
+- Support POINT_CLOUD2 message publish
+- 2nd Field Integration in K-City Completed
+
+v2.1
+- Data processing by Frame ID (RADAR Sensor)
+- Support ros2 publish in 1 Frame unit
+- Development version (Field Integration not performed)
+
+v2.2
+- Strengthened data race processing for data processing by Frame ID (RADAR Sensor) (multiple Tread Design)
+- Added CRC to heartbeat message (Auto Connection between RADAR Sensors and RADAR Component)
+- Development version (Field Integration not performed)
