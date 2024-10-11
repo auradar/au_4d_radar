@@ -13,7 +13,9 @@
 #define MESSAGE_PARSE_HPP
 
 #include <cstdint>
+#include <mutex>
 #include <string>
+#include <unordered_map>
 #include <boost/uuid/uuid.hpp>
 
 #include <nav_msgs/msg/odometry.hpp>
@@ -22,7 +24,7 @@
 #include <radar_msgs/msg/radar_track.hpp>
 #include <radar_msgs/msg/radar_tracks.hpp>
 #include <sensor_msgs/msg/point_cloud2.hpp>
-
+#include "util/yamlParser.hpp"
 
 namespace au_4d_radar
 {
@@ -42,10 +44,11 @@ namespace au_4d_radar
         bool checkValidFrameId(uint32_t radar_id);
 
     private:
-        void makeRadarPointCloud2Msg(uint8_t *p_buff, sensor_msgs::msg::PointCloud2& cloud_msg, bool& complete); 
+        void makeRadarPointCloud2Msg(uint8_t *p_buff, sensor_msgs::msg::PointCloud2& cloud_msg, bool& complete);
         void makeRadarScanMsg(uint8_t *p_buff, radar_msgs::msg::RadarScan& radar_scan_msg, bool& complete);
         void makeRadarTracksMsg(uint8_t *p_buff, radar_msgs::msg::RadarTracks& radar_tracks_msg, bool& complete);
-        std::string getFrameId(uint32_t radar_id);
+        std::string getFrameIdName(uint32_t radar_id);
+        RadarInfo getRadarInfo(uint32_t frame_id);
 
         uint32_t sequence_id_;
         std::string frame_id_;
@@ -54,8 +57,8 @@ namespace au_4d_radar
         std::mutex mtx_point_cloud2;
         std::mutex mtx_radar_scan;
         std::mutex mtx_radar_track;
-        std::recursive_mutex parser_map_mutex_;
-        std::unordered_map<uint32_t, std::string> radarsMap_;
+        std::recursive_mutex yaml_map_mutex_;
+        std::unordered_map<uint32_t, RadarInfo> radarsMap_;
 
         device_au_radar_node* radar_node_;
     };

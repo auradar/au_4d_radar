@@ -1,7 +1,0 @@
-device_au_radar_node:
-  ros__parameters:
-    # topic params
-    frame_id: "radar"
-    pub_radar_scan_topic_name: "/device/au/radar/scan"
-    pub_radar_track_topic_name: "/device/au/radar/track"
-    pub_radar_mon_topic_name: "/device/au/radar/status"

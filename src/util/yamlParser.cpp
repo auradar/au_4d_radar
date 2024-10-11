@@ -60,9 +60,14 @@ std::string YamlParser::readFrameId(const std::string& key) {
             YAML::Node radars = config["radars"];
 
             if (radars[key]) {
-                return radars[key].as<std::string>();
+                if (radars[key]["frame_id"]) {
+                    return radars[key]["frame_id"].as<std::string>();
+                } else {
+                    RCLCPP_ERROR(rclcpp::get_logger("readFrameId"), "'frame_id' not found for radar: %s", key.c_str());
+                    return "";
+                }
             } else {
-                RCLCPP_ERROR(rclcpp::get_logger("readFrameId"), "frame_id not found in 'radars' section: %s", key.c_str());
+                RCLCPP_ERROR(rclcpp::get_logger("readFrameId"), "Radar not found in 'radars' section: %s", key.c_str());
                 return "";
             }
         } else {
@@ -75,19 +80,19 @@ std::string YamlParser::readFrameId(const std::string& key) {
     }
 }
 
-std::unordered_map<uint32_t, std::string> YamlParser::readRadarsAsMap() {
-    std::unordered_map<uint32_t, std::string> radars_map;
+std::unordered_map<uint32_t, RadarInfo> YamlParser::readRadarsAsMap() {
+    std::unordered_map<uint32_t, RadarInfo> radars_map;
 
     try {
         std::string yaml_file_path = ament_index_cpp::get_package_share_directory("au_4d_radar") + "/config/system_info.yaml";
-        YAML::Node  config         = YAML::LoadFile(yaml_file_path);
+        RCLCPP_INFO(rclcpp::get_logger("readRadarsAsMap"), "Loading YAML file from: %s", yaml_file_path.c_str());
+        YAML::Node config = YAML::LoadFile(yaml_file_path);
 
         if (config["radars"]) {
             YAML::Node radars = config["radars"];
 
             for (YAML::const_iterator it = radars.begin(); it != radars.end(); ++it) {
-                std::string key   = it->first.as<std::string>();
-                std::string value = it->second.as<std::string>();
+                std::string key = it->first.as<std::string>();
 
                 std::stringstream ss;
                 uint32_t radar_id;
@@ -99,7 +104,42 @@ std::unordered_map<uint32_t, std::string> YamlParser::readRadarsAsMap() {
                     continue;
                 }
 
-                radars_map[radar_id] = value;
+                RadarInfo radar_info;
+
+                if (it->second["frame_id"]) {
+                    radar_info.frame_id = it->second["frame_id"].as<std::string>();
+                } else {
+                    radar_info.frame_id = "";
+                    RCLCPP_ERROR(rclcpp::get_logger("readRadarsAsMap"), "'frame_id' field not found for radar: %s", key.c_str());
+                    continue;
+                }
+
+                if (it->second["xyz"] && it->second["rpy"]) {
+                    YAML::Node xyz = it->second["xyz"];
+                    if (xyz.size() == 3) {
+                        radar_info.x = xyz[0].as<float>();
+                        radar_info.y = xyz[1].as<float>();
+                        radar_info.z = xyz[2].as<float>();
+                    } else {
+                        RCLCPP_ERROR(rclcpp::get_logger("readRadarsAsMap"), "Invalid size for 'xyz' array for radar: %s", key.c_str());
+                        continue;
+                    }
+
+                    YAML::Node rpy = it->second["rpy"];
+                    if (rpy.size() == 3) {
+                        radar_info.roll = rpy[0].as<float>();
+                        radar_info.pitch = rpy[1].as<float>();
+                        radar_info.yaw = rpy[2].as<float>();
+                    } else {
+                        RCLCPP_ERROR(rclcpp::get_logger("readRadarsAsMap"), "Invalid size for 'rpy' array for radar: %s", key.c_str());
+                        continue;
+                    }
+                } else {
+                    RCLCPP_ERROR(rclcpp::get_logger("readRadarsAsMap"), "'xyz' or 'rpy' field not found for radar: %s", key.c_str());
+                    continue;
+                }
+
+                radars_map[radar_id] = radar_info;
             }
         } else {
             RCLCPP_ERROR(rclcpp::get_logger("readRadarsAsMap"), "'radars' section not found in system_info.yaml");
@@ -110,3 +150,5 @@ std::unordered_map<uint32_t, std::string> YamlParser::readRadarsAsMap() {
 
     return radars_map;
 }
+
+

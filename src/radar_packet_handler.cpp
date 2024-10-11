@@ -129,16 +129,17 @@ bool RadarPacketHandler::initialize() {
     client_addr_.sin_addr.s_addr = htonl(INADDR_ANY);
 
     message_parser_.init();
+
     return true;
 }
 
 void RadarPacketHandler::receiveMessages() {
     std::vector<uint8_t> buffer(BUFFER_SIZE);
-    socklen_t addr_len = sizeof(client_addr_);
+    socklen_t addr_len = sizeof(server_addr_);
 
     while (receive_running.load()) {
         int n = recvfrom(rd_sockfd, buffer.data(), buffer.size(), MSG_DONTWAIT,
-                         (struct sockaddr*)&client_addr_, &addr_len);
+                         (struct sockaddr*)&server_addr_, &addr_len);
         if (n < 0) {
             if (errno != EAGAIN && errno != EWOULDBLOCK) {
                 RCLCPP_ERROR(rclcpp::get_logger("RadarPacketHandler"), "recvfrom failed");
@@ -179,8 +180,8 @@ void RadarPacketHandler::receiveMessages() {
 }
 
 void RadarPacketHandler::receiveMessagesTwoQueues() {
-    uint8_t buffer[BUFFER_SIZE];
-    socklen_t addr_len = sizeof(client_addr_);
+    std::vector<uint8_t> buffer(BUFFER_SIZE);
+    socklen_t addr_len = sizeof(server_addr_);
 
     while (receive_running.load()) {
         if (rd_sockfd < 0) {
@@ -188,7 +189,7 @@ void RadarPacketHandler::receiveMessagesTwoQueues() {
             return;
         }
 
-        int n = recvfrom(rd_sockfd, buffer, BUFFER_SIZE, MSG_DONTWAIT, (struct sockaddr*)&client_addr_, &addr_len);
+        int n = recvfrom(rd_sockfd, buffer.data(), buffer.size(), MSG_DONTWAIT, (struct sockaddr*)&server_addr_, &addr_len);
         if (n < 0) {
             if (errno != EAGAIN && errno != EWOULDBLOCK) {
                 RCLCPP_ERROR(rclcpp::get_logger("RadarPacketHandler"), "recvfrom failed");
@@ -196,13 +197,13 @@ void RadarPacketHandler::receiveMessagesTwoQueues() {
             usleep(1000);
             continue;
         } else if (n < 36 || n >= BUFFER_SIZE) { // tsPacketHeader(36)
-            RCLCPP_INFO(rclcpp::get_logger("RadarPacketHandler"), "Message size: %d bytes invalid", n);
+            RCLCPP_INFO(rclcpp::get_logger("RadarPacketHandler"), "Invalid message size: %d bytes", n);
             continue;
         }
 
         uint32_t unique_id = Conversion::littleEndianToUint32(&buffer[MSG_TYPE_OFFSET]);
-        if(message_parser_.checkValidFrameId(unique_id) == false) {
-            RCLCPP_INFO(rclcpp::get_logger("receiveMessagesTwoQueues"), "FrameId not exist in system_info.yaml FrameId: %08x", unique_id);
+        if (!message_parser_.checkValidFrameId(unique_id)) {
+            RCLCPP_INFO(rclcpp::get_logger("RadarPacketHandler"), "Invalid FrameId: %08x", unique_id);
             continue;
         }
 
@@ -210,9 +211,9 @@ void RadarPacketHandler::receiveMessagesTwoQueues() {
             std::lock_guard<std::mutex> lock(queue_mutex_);
             if (message_queue_.size() >= MAX_QUEUE_SIZE) {
                 message_queue_.pop();
-                RCLCPP_ERROR(rclcpp::get_logger("receiveMessagesTwoQueues"), "need to ramp up process speed");
+                RCLCPP_ERROR(rclcpp::get_logger("RadarPacketHandler"), "Message queue is full, discarding oldest message");
             }
-            message_queue_.emplace(buffer, buffer + n);
+            message_queue_.emplace(buffer.begin(), buffer.begin() + n);
         }
 
         queue_cv_.notify_one();
@@ -222,16 +223,11 @@ void RadarPacketHandler::receiveMessagesTwoQueues() {
 void RadarPacketHandler::processMessages() {
     while (process_running.load()) {
         std::vector<uint8_t> buffer;
-
         {
             std::unique_lock<std::mutex> lock(queue_mutex_);
             queue_cv_.wait(lock, [this] { return !message_queue_.empty() || !process_running.load(); });
 
             if (!process_running.load()) {
-                std::lock_guard<std::mutex> lock(client_queue_mutex_);
-                while (!message_queue_.empty()) {
-                    message_queue_.pop();
-                }
                 break;
             }
 
@@ -245,7 +241,7 @@ void RadarPacketHandler::processMessages() {
             std::lock_guard<std::mutex> lock(client_queue_mutex_);
             if (client_message_queues_[unique_id].size() >= MAX_QUEUE_SIZE) {
                 client_message_queues_[unique_id].pop();
-                RCLCPP_ERROR(rclcpp::get_logger("processMessages"), "need to ramp up process speed");
+                RCLCPP_ERROR(rclcpp::get_logger("RadarPacketHandler"), "Client message queue is full, discarding oldest message");
             }
             client_message_queues_[unique_id].push(buffer);
         }
@@ -277,9 +273,6 @@ void RadarPacketHandler::processClientMessages(uint32_t unique_id) {
             });
 
             if (!process_runnings.load()) {
-                while (!client_message_queues_[unique_id].empty()) {
-                    client_message_queues_[unique_id].pop();
-                }
                 break;
             }
 
@@ -291,39 +284,83 @@ void RadarPacketHandler::processClientMessages(uint32_t unique_id) {
 
         switch (msg_type) {
             case HeaderType::HEADER_SCAN:
-            {
-                bool completeRadarScanMsg   = false;
-                bool completePointCloud2Msg = false;
-                message_parser_.parseRadarScanMsg(&buffer[MSG_TYPE_OFFSET], radar_scan_msg, completeRadarScanMsg);
-                if (completeRadarScanMsg) {
-                    radar_node_->publishRadarScanMsg(radar_scan_msg);
-                    radar_scan_msg.returns.clear();
-                }
-
-                if (point_cloud2_setting.load()) {
-                    message_parser_.parsePointCloud2Msg(&buffer[MSG_TYPE_OFFSET], radar_cloud_msg, completePointCloud2Msg);
-                    if (completePointCloud2Msg) {
-                        radar_node_->publishRadarPointCloud2(radar_cloud_msg);
-                        radar_cloud_msg.data.clear();
-                    }
-                }
-            }
+                handleRadarScanMessage(buffer, radar_scan_msg, radar_cloud_msg);
                 break;
-
             case HeaderType::HEADER_TRACK:
-            {
-                bool completeRadarTrackMsg = false;
-                message_parser_.parseRadarTrackMsg(&buffer[MSG_TYPE_OFFSET], radar_tracks_msg, completeRadarTrackMsg);
-                if (completeRadarTrackMsg) {
-                    radar_node_->publishRadarTrackMsg(radar_tracks_msg);
-                    radar_tracks_msg.tracks.clear();
-                }
-            }
+                //handleRadarTrackMessage(buffer, radar_tracks_msg);
                 break;
-
             default:
+                RCLCPP_ERROR(rclcpp::get_logger("RadarPacketHandler"), "Unknown message type: %08x", msg_type);
                 break;
         }
+    }
+}
+
+void RadarPacketHandler::handleRadarScanMessage(std::vector<uint8_t>& buffer, radar_msgs::msg::RadarScan& radar_scan_msg,
+                                                sensor_msgs::msg::PointCloud2& radar_cloud_msg) {
+    {
+        bool completeRadarScanMsg   = false;
+        message_parser_.parseRadarScanMsg(&buffer[MSG_TYPE_OFFSET], radar_scan_msg, completeRadarScanMsg);
+        if (completeRadarScanMsg) {
+            std::unique_lock<std::mutex> lock(copy_mutex_scan);
+            #if 0
+            time_sync_scan = radar_scan_msgs.header.stamp.nanosec / 10000000;
+            if(time_sync_pre_scan != time_sync_scan) {
+                radar_node_->publishRadarScanMsg(radar_scan_msgs);
+                radar_scan_msgs.returns.clear();
+                radar_scan_msgs = radar_scan_msg;
+                radar_scan_msgs.header.frame_id = "RADARS";
+            } else {
+                radar_scan_msgs.returns.insert(
+                    radar_scan_msgs.returns.end(),
+                    std::make_move_iterator(radar_scan_msg.returns.begin()),
+                    std::make_move_iterator(radar_scan_msg.returns.end())
+                )
+            }o
+            time_sync_pre_scan = time_sync_scan;
+            #else
+                radar_node_->publishRadarScanMsg(radar_scan_msg);
+            #endif
+            radar_scan_msg.returns.clear();
+        }
+    }
+
+    if (point_cloud2_setting.load()) {
+        bool completePointCloud2Msg = false;
+        message_parser_.parsePointCloud2Msg(&buffer[MSG_TYPE_OFFSET], radar_cloud_msg, completePointCloud2Msg);
+        if (completePointCloud2Msg) {
+            std::unique_lock<std::mutex> lock(copy_mutex_cloud);
+            time_sync_cloud = radar_cloud_msg.header.stamp.nanosec / 10000000;
+            if(time_sync_pre_cloud != time_sync_cloud) {
+                radar_node_->publishRadarPointCloud2(radar_cloud_msgs);
+                radar_cloud_msgs.data.clear();
+                RCLCPP_INFO(rclcpp::get_logger("processClientMessages"), "id %s 50ms %02u",
+                    radar_cloud_msg.header.frame_id.c_str(), time_sync_cloud);
+                radar_cloud_msgs = radar_cloud_msg;
+                radar_cloud_msgs.header.frame_id = "RADARS";
+            } else {
+                RCLCPP_INFO(rclcpp::get_logger("processClientMessages"), "id %s 50ms %02u",
+                    radar_cloud_msg.header.frame_id.c_str(), time_sync_cloud);
+                radar_cloud_msgs.width    += radar_cloud_msg.width;
+                radar_cloud_msgs.row_step += radar_cloud_msg.row_step;
+                radar_cloud_msgs.data.insert(
+                    radar_cloud_msgs.data.end(),
+                    std::make_move_iterator(radar_cloud_msg.data.begin()),
+                    std::make_move_iterator(radar_cloud_msg.data.end())
+                );
+            }
+            time_sync_pre_cloud = time_sync_cloud;
+            radar_cloud_msg.data.clear();
+        }
+    }
+}
+
+void RadarPacketHandler::handleRadarTrackMessage(std::vector<uint8_t>& buffer, radar_msgs::msg::RadarTracks& radar_tracks_msg) {
+    bool completeRadarTrackMsg = false;
+    message_parser_.parseRadarTrackMsg(&buffer[MSG_TYPE_OFFSET], radar_tracks_msg, completeRadarTrackMsg);
+    if (completeRadarTrackMsg) {
+        radar_node_->publishRadarTrackMsg(radar_tracks_msg);
+        radar_tracks_msg.tracks.clear();
     }
 }
 
@@ -341,5 +378,6 @@ int RadarPacketHandler::sendMessages(const char* msg, const char* addr) {
     }
     return 0;
 }
+
 
 }  // namespace au_4d_radar

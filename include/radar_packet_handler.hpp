@@ -50,6 +50,10 @@ namespace au_4d_radar
         void receiveMessagesTwoQueues();
         void processMessages();
         void processClientMessages(uint32_t unique_id);
+        void processPerFrameForAllSensor();
+        void handleRadarScanMessage(std::vector<uint8_t>& buffer, radar_msgs::msg::RadarScan& radar_scan_msg,
+                                                sensor_msgs::msg::PointCloud2& radar_cloud_msg);        
+        void handleRadarTrackMessage(std::vector<uint8_t>& buffer, radar_msgs::msg::RadarTracks& radar_tracks_msg);
 
         int rd_sockfd;
         device_au_radar_node* radar_node_;
@@ -60,6 +64,7 @@ namespace au_4d_radar
 
         std::thread receive_thread_;
         std::thread process_thread_;
+  
         std::queue<std::vector<uint8_t>> message_queue_;
         std::mutex queue_mutex_;
         std::condition_variable queue_cv_;
@@ -73,6 +78,16 @@ namespace au_4d_radar
         std::unordered_map<uint32_t, std::queue<std::vector<uint8_t>>> client_message_queues_;
         std::mutex client_queue_mutex_;
         std::unordered_map<uint32_t, std::condition_variable> client_queue_cvs_;
+   
+        radar_msgs::msg::RadarScan radar_scan_msgs;
+        sensor_msgs::msg::PointCloud2 radar_cloud_msgs;
+        std::mutex copy_mutex_scan;
+        std::mutex copy_mutex_cloud;
+        uint8_t time_sync_scan;
+        uint8_t time_sync_pre_scan;
+        uint8_t time_sync_cloud;
+        uint8_t time_sync_pre_cloud;
+
     };
 }
 
