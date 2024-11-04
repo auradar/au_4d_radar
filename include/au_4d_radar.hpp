@@ -24,7 +24,7 @@
 
 namespace au_4d_radar
 {
-    const std::string DEFAULT_IP = "255.255.255.255" ;    // "255.255.255.255" "192.168.10.238"
+    const std::string DEFAULT_IP = "255.255.255.255" ;
 
     class device_au_radar_node: public rclcpp::Node
     {
@@ -48,17 +48,18 @@ namespace au_4d_radar
         void publish();
 
         rclcpp::Publisher<radar_msgs::msg::RadarScan>::SharedPtr pub_radar_scan;
-        rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr pub_radar_point_cloud2;
         rclcpp::Publisher<radar_msgs::msg::RadarTracks>::SharedPtr pub_radar_track;
         rclcpp::Publisher<mon_msgs::msg::RadarHealth>::SharedPtr pub_radar_mon;
+        rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr pub_radar_point_cloud2;
+        rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr pub_radar_front;
+        rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr pub_radar_front_right;
+        rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr pub_radar_front_left;
+        rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr pub_radar_rear_left;
+        rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr pub_radar_rear_right;
 
         rclcpp::TimerBase::SharedPtr timer_;
         rclcpp::TimerBase::SharedPtr timer_mon_;
-
-        std::mutex mtx_point_cloud2;
-        std::mutex mtx_radar_scan;
-        std::mutex mtx_radar_track;
-
+        std::mutex mtx_msg_publisher;
         static uint32_t temp_cnt;
 
         static device_au_radar_node* instance_;

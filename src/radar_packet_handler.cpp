@@ -95,7 +95,8 @@ void RadarPacketHandler::stop() {
 }
 
 bool RadarPacketHandler::initialize() {
-    point_cloud2_setting = YamlParser::readPointCloud2Setting("POINT_CLOUD2");
+    point_cloud2_setting_ = YamlParser::readPointCloud2Setting("POINT_CLOUD2");
+    message_number_ = YamlParser::readMessageNumber("MESSAGE_NUMBER");
 
     rd_sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     if (rd_sockfd < 0) {
@@ -128,81 +129,29 @@ bool RadarPacketHandler::initialize() {
     client_addr_.sin_port        = htons(TARGET_PORT - 1);
     client_addr_.sin_addr.s_addr = htonl(INADDR_ANY);
 
-    message_parser_.init();
     return true;
 }
 
-void RadarPacketHandler::receiveMessages() {
-    std::vector<uint8_t> buffer(BUFFER_SIZE);
-    socklen_t addr_len = sizeof(client_addr_);
-
-    while (receive_running.load()) {
-        int n = recvfrom(rd_sockfd, buffer.data(), buffer.size(), MSG_DONTWAIT,
-                         (struct sockaddr*)&client_addr_, &addr_len);
-        if (n < 0) {
-            if (errno != EAGAIN && errno != EWOULDBLOCK) {
-                RCLCPP_ERROR(rclcpp::get_logger("RadarPacketHandler"), "recvfrom failed");
-            }
-            usleep(1000);
-            continue;
-        } else if (n < 36 || n >= BUFFER_SIZE) { // tsPacketHeader(36)
-            RCLCPP_INFO(rclcpp::get_logger("RadarPacketHandler"), "Message size: %d bytes", n);
-            continue;
-        }
-
-        uint32_t unique_id = Conversion::littleEndianToUint32(&buffer[MSG_TYPE_OFFSET]);
-        if(message_parser_.checkValidFrameId(unique_id) == false) {
-            RCLCPP_INFO(rclcpp::get_logger("receiveMessages"), "FrameId not exist in system_info.yaml FrameId: %08x", unique_id);
-            continue;
-        }
-
-        {
-            std::lock_guard<std::mutex> lock(client_queue_mutex_);
-            if (client_message_queues_[unique_id].size() >= MAX_QUEUE_SIZE) {
-                client_message_queues_[unique_id].pop();
-                RCLCPP_ERROR(rclcpp::get_logger("receiveMessages"), "need to ramp up process speed");
-            }
-            client_message_queues_[unique_id].push(buffer);
-        }
-
-        {
-            std::lock_guard<std::mutex> lock(client_threads_mutex_);
-            if (client_threads_.find(unique_id) == client_threads_.end()) {
-                client_queue_cvs_[unique_id];
-                client_threads_[unique_id] = std::thread(&RadarPacketHandler::processClientMessages, this, unique_id);
-                client_threads_[unique_id].detach();
-            }
-        }
-
-        client_queue_cvs_[unique_id].notify_one();
-    }
-}
-
 void RadarPacketHandler::receiveMessagesTwoQueues() {
-    uint8_t buffer[BUFFER_SIZE];
-    socklen_t addr_len = sizeof(client_addr_);
+    socklen_t addr_len = sizeof(server_addr_);
 
     while (receive_running.load()) {
-        if (rd_sockfd < 0) {
-            RCLCPP_ERROR(rclcpp::get_logger("RadarPacketHandler"), "Socket file descriptor is invalid");
-            return;
-        }
-
-        int n = recvfrom(rd_sockfd, buffer, BUFFER_SIZE, MSG_DONTWAIT, (struct sockaddr*)&client_addr_, &addr_len);
+        std::vector<uint8_t> buffer(BUFFER_SIZE);
+        int n = recvfrom(rd_sockfd, buffer.data(), buffer.size(), MSG_DONTWAIT, (struct sockaddr*)&server_addr_, &addr_len);
         if (n < 0) {
             if (errno != EAGAIN && errno != EWOULDBLOCK) {
-                RCLCPP_ERROR(rclcpp::get_logger("RadarPacketHandler"), "recvfrom failed");
+                RCLCPP_ERROR(rclcpp::get_logger("receiveMessagesTwoQueues"), "recvfrom failed");
             }
             usleep(1000);
             continue;
-        } else if (n < 36 || n >= BUFFER_SIZE) { // tsPacketHeader(36)
-            RCLCPP_INFO(rclcpp::get_logger("RadarPacketHandler"), "Message size: %d bytes invalid", n);
+        } else if (n < static_cast<int>(mTsPacketHeaderSize) || n >= BUFFER_SIZE) {
+            RCLCPP_INFO(rclcpp::get_logger("receiveMessagesTwoQueues"), "Invalid message size: %d bytes", n);
             continue;
         }
 
         uint32_t unique_id = Conversion::littleEndianToUint32(&buffer[MSG_TYPE_OFFSET]);
-        if(message_parser_.checkValidFrameId(unique_id) == false) {
-            RCLCPP_INFO(rclcpp::get_logger("receiveMessagesTwoQueues"), "FrameId not exist in system_info.yaml FrameId: %08x", unique_id);
+        if (!YamlParser::checkValidFrameId(unique_id)) {
+            RCLCPP_INFO(rclcpp::get_logger("receiveMessagesTwoQueues"), "Invalid FrameId: %08x", unique_id);
             continue;
         }
 
@@ -210,9 +159,9 @@ void RadarPacketHandler::receiveMessagesTwoQueues() {
             std::lock_guard<std::mutex> lock(queue_mutex_);
             if (message_queue_.size() >= MAX_QUEUE_SIZE) {
                 message_queue_.pop();
-                RCLCPP_ERROR(rclcpp::get_logger("receiveMessagesTwoQueues"), "need to ramp up process speed");
+                RCLCPP_ERROR(rclcpp::get_logger("receiveMessagesTwoQueues"), "Message queue is full, discarding oldest message");
             }
-            message_queue_.emplace(buffer, buffer + n);
+            message_queue_.emplace(buffer.begin(), buffer.begin() + n);
         }
 
         queue_cv_.notify_one();
@@ -220,19 +169,21 @@ void RadarPacketHandler::receiveMessagesTwoQueues() {
 }
 
 void RadarPacketHandler::processMessages() {
+    std::vector<uint8_t> buffer(BUFFER_SIZE);
     while (process_running.load()) {
-        std::vector<uint8_t> buffer;
-
+        // std::vector<uint8_t> buffer(BUFFER_SIZE);
         {
             std::unique_lock<std::mutex> lock(queue_mutex_);
             queue_cv_.wait(lock, [this] { return !message_queue_.empty() || !process_running.load(); });
 
             if (!process_running.load()) {
-                std::lock_guard<std::mutex> lock(client_queue_mutex_);
-                while (!message_queue_.empty()) {
-                    message_queue_.pop();
-                }
                 break;
+            }
+
+            if (message_queue_.front().size() < mTsPacketHeaderSize || message_queue_.front().size() >= BUFFER_SIZE) {
+                RCLCPP_WARN(rclcpp::get_logger("processMessages"), "Invalid message size detected and discarded.");
+                message_queue_.pop();
+                continue;
             }
 
             buffer = std::move(message_queue_.front());
@@ -245,7 +196,7 @@ void RadarPacketHandler::processMessages() {
             std::lock_guard<std::mutex> lock(client_queue_mutex_);
             if (client_message_queues_[unique_id].size() >= MAX_QUEUE_SIZE) {
                 client_message_queues_[unique_id].pop();
-                RCLCPP_ERROR(rclcpp::get_logger("processMessages"), "need to ramp up process speed");
+                RCLCPP_ERROR(rclcpp::get_logger("processMessages"), "Client message queue is full, discarding oldest message");
             }
             client_message_queues_[unique_id].push(buffer);
         }
@@ -257,7 +208,7 @@ void RadarPacketHandler::processMessages() {
                 client_threads_[unique_id] = std::thread(&RadarPacketHandler::processClientMessages, this, unique_id);
             }
         }
-
+        buffer.clear();
         client_queue_cvs_[unique_id].notify_one();
     }
 }
@@ -266,10 +217,12 @@ void RadarPacketHandler::processClientMessages(uint32_t unique_id) {
     radar_msgs::msg::RadarScan radar_scan_msg;
     sensor_msgs::msg::PointCloud2 radar_cloud_msg;
     radar_msgs::msg::RadarTracks radar_tracks_msg;
+    std::deque<sensor_msgs::msg::PointCloud2> radar_cloud_buffer;
+
+    std::vector<uint8_t> buffer(BUFFER_SIZE);
 
     while (process_runnings.load()) {
-        std::vector<uint8_t> buffer(BUFFER_SIZE);
-
+        // std::vector<uint8_t> buffer(BUFFER_SIZE);
         {
             std::unique_lock<std::mutex> lock(client_queue_mutex_);
             client_queue_cvs_[unique_id].wait(lock, [this, &unique_id] {
@@ -277,9 +230,6 @@ void RadarPacketHandler::processClientMessages(uint32_t unique_id) {
             });
 
             if (!process_runnings.load()) {
-                while (!client_message_queues_[unique_id].empty()) {
-                    client_message_queues_[unique_id].pop();
-                }
                 break;
             }
 
@@ -291,39 +241,100 @@ void RadarPacketHandler::processClientMessages(uint32_t unique_id) {
 
         switch (msg_type) {
             case HeaderType::HEADER_SCAN:
-            {
-                bool completeRadarScanMsg   = false;
-                bool completePointCloud2Msg = false;
-                message_parser_.parseRadarScanMsg(&buffer[MSG_TYPE_OFFSET], radar_scan_msg, completeRadarScanMsg);
-                if (completeRadarScanMsg) {
-                    radar_node_->publishRadarScanMsg(radar_scan_msg);
-                    radar_scan_msg.returns.clear();
-                }
-
-                if (point_cloud2_setting.load()) {
-                    message_parser_.parsePointCloud2Msg(&buffer[MSG_TYPE_OFFSET], radar_cloud_msg, completePointCloud2Msg);
-                    if (completePointCloud2Msg) {
-                        radar_node_->publishRadarPointCloud2(radar_cloud_msg);
-                        radar_cloud_msg.data.clear();
-                    }
-                }
-            }
+                handleRadarScanMessage(buffer, radar_scan_msg, radar_cloud_msg, radar_cloud_buffer);
                 break;
-
-            case HeaderType::HEADER_TRACK:
-            {
-                bool completeRadarTrackMsg = false;
-                message_parser_.parseRadarTrackMsg(&buffer[MSG_TYPE_OFFSET], radar_tracks_msg, completeRadarTrackMsg);
-                if (completeRadarTrackMsg) {
-                    radar_node_->publishRadarTrackMsg(radar_tracks_msg);
-                    radar_tracks_msg.tracks.clear();
-                }
-            }
-                break;
-
+            //case HeaderType::HEADER_TRACK:
+                //handleRadarTrackMessage(buffer, radar_tracks_msg);
+                //break;
             default:
+                RCLCPP_ERROR(rclcpp::get_logger("processClientMessages"), "Unknown message type: %08x", msg_type);
                 break;
         }
+        buffer.clear();
+    }
+}
+
+void RadarPacketHandler::handleRadarScanMessage(std::vector<uint8_t>& buffer, radar_msgs::msg::RadarScan& radar_scan_msg,
+        sensor_msgs::msg::PointCloud2& radar_cloud_msg, std::deque<sensor_msgs::msg::PointCloud2>& radar_cloud_buffer) {
+    
+    {
+        bool completeRadarScanMsg = false;
+        {
+            std::lock_guard<std::mutex> lock(parse_mutex_);
+            message_parser_.parseRadarScanMsg(&buffer[MSG_TYPE_OFFSET], radar_scan_msg, completeRadarScanMsg);
+        }
+
+        if (completeRadarScanMsg) {
+            std::lock_guard<std::mutex> lock(publish_mutex_);
+            radar_node_->publishRadarScanMsg(radar_scan_msg);
+            radar_scan_msg.returns.clear();
+        }
+    }
+
+    if (point_cloud2_setting_) {
+        bool completePointCloud2Msg = false;
+        {
+            std::lock_guard<std::mutex> lock(parse_mutex_);
+            message_parser_.parsePointCloud2Msg(&buffer[MSG_TYPE_OFFSET], radar_cloud_msg, completePointCloud2Msg);
+        }
+
+        if (completePointCloud2Msg) {
+            std::lock_guard<std::mutex> lock(publish_mutex_);
+            sensor_msgs::msg::PointCloud2 multiple_cloud_messages;
+            assemblePointCloud(radar_cloud_buffer, radar_cloud_msg, multiple_cloud_messages);
+            radar_node_->publishRadarPointCloud2(multiple_cloud_messages);
+            radar_cloud_msg.data.clear();
+        }
+    }
+}
+
+/**
+ * @brief function to assemble point cloud messages into a single message
+ *
+ * @param radar_cloud_buffer
+ * @param radar_cloud_msg
+ * @param multiple_cloud_messages
+ */
+void RadarPacketHandler::assemblePointCloud(std::deque<sensor_msgs::msg::PointCloud2>& radar_cloud_buffer,
+        const sensor_msgs::msg::PointCloud2& radar_cloud_msg, sensor_msgs::msg::PointCloud2& multiple_cloud_messages) {
+
+    if (message_number_ > 1) {
+        radar_cloud_buffer.push_back(radar_cloud_msg);
+        if (radar_cloud_buffer.size() > message_number_) {
+            radar_cloud_buffer.pop_front();
+        }
+
+        multiple_cloud_messages.width = 0;
+        multiple_cloud_messages.height = 1;
+        multiple_cloud_messages.is_dense = true;
+        multiple_cloud_messages.is_bigendian = false;
+        multiple_cloud_messages.point_step = radar_cloud_msg.point_step;
+        multiple_cloud_messages.fields = radar_cloud_msg.fields;
+        multiple_cloud_messages.header = radar_cloud_msg.header;
+
+        for (const auto& msg : radar_cloud_buffer) {
+            multiple_cloud_messages.width += msg.width;
+            multiple_cloud_messages.data.insert(multiple_cloud_messages.data.end(),
+                                                std::make_move_iterator(msg.data.begin()),
+                                                std::make_move_iterator(msg.data.end()));
+        }
+        multiple_cloud_messages.row_step = multiple_cloud_messages.point_step * multiple_cloud_messages.width;
+    } else {
+        multiple_cloud_messages = radar_cloud_msg;
+    }
+}
+
+void RadarPacketHandler::handleRadarTrackMessage(std::vector<uint8_t>& buffer, radar_msgs::msg::RadarTracks& radar_tracks_msg) {
+    bool completeRadarTrackMsg = false;
+    {
+        std::lock_guard<std::mutex> lock(parse_mutex_);
+        message_parser_.parseRadarTrackMsg(&buffer[MSG_TYPE_OFFSET], radar_tracks_msg, completeRadarTrackMsg);
+    }
+
+    if (completeRadarTrackMsg) {
+        std::lock_guard<std::mutex> lock(publish_mutex_);
+        radar_node_->publishRadarTrackMsg(radar_tracks_msg);
+        radar_tracks_msg.tracks.clear();
     }
 }
 
@@ -341,5 +352,6 @@ int RadarPacketHandler::sendMessages(const char* msg, const char* addr) {
     }
     return 0;
 }
+
 
 }  // namespace au_4d_radar

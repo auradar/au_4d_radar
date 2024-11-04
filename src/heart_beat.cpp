@@ -16,7 +16,7 @@
 #include <ifaddrs.h>
 #include <sys/socket.h>
 #include <netdb.h>
-
+#include <vector>
 #include <sstream>
 #include "flat/Heartbeat_generated.h"
 #include "flat/RequestConnection_generated.h"
@@ -164,9 +164,9 @@ void Heartbeat::processRequestConnection(const uint8_t* buffer, const std::strin
 
         sendto(send_sockfd, buff.data(), buff_size, 0, (const struct sockaddr *)&send_server_addr, len);
         RCLCPP_INFO(rclcpp::get_logger("Heartbeat"), "Response for request connection sent to: %s receivedHostname: %s", receivedIp.c_str(), receivedHostname.c_str());
-        radar_node_->radar_handler_.sendMessages("SS", receivedIp.c_str());
-        std::this_thread::sleep_for(std::chrono::seconds(1));
-        radar_node_->radar_handler_.sendMessages("SS", receivedIp.c_str());
+        // radar_node_->radar_handler_.sendMessages("SS", receivedIp.c_str());
+        // std::this_thread::sleep_for(std::chrono::seconds(1));
+        // radar_node_->radar_handler_.sendMessages("SS", receivedIp.c_str());
     } else {
         RCLCPP_INFO(rclcpp::get_logger("Heartbeat"), "processRequestConnection() Hostname does not match receivedHostname: %s", receivedHostname.c_str());
     }
@@ -200,20 +200,23 @@ void Heartbeat::processHeartbeatMessage(const uint8_t* buffer, const std::string
 }
 
 void Heartbeat::handleClientMessages() {
-    uint8_t buffer[BUFFER_SIZE];
 
     while (running) {
+        std::vector<uint8_t> buffer(BUFFER_SIZE);
         socklen_t len = sizeof(recv_server_addr);
-        int n = recvfrom(recv_sockfd, buffer, sizeof(buffer), 0, (struct sockaddr *)&recv_server_addr, &len);
+        int n = recvfrom(recv_sockfd, buffer.data(), buffer.size(), MSG_DONTWAIT, (struct sockaddr *)&recv_server_addr, &len);
         if (n < 0) {
-            RCLCPP_ERROR(rclcpp::get_logger("Heartbeat"), "recvfrom failed");
+            if (errno != EAGAIN && errno != EWOULDBLOCK) {
+                RCLCPP_ERROR(rclcpp::get_logger("Heartbeat"), "recvfrom failed");
+            }
+            usleep(1000);
             continue;
         } else if (n < 10 || n > BUFFER_SIZE) {
             RCLCPP_ERROR(rclcpp::get_logger("Heartbeat"), "message size exceeds buffer size");
             continue;
         }
         // MessageType (4 bytes) + CRC32 (4 bytes) + Payload Length (2 bytes) + Payload Body
-        uint32_t messageType = Conversion::bigEndianToUint32(buffer);
+        uint32_t messageType = Conversion::bigEndianToUint32(buffer.data());
         if (messageType == 0) {
             RCLCPP_ERROR(rclcpp::get_logger("Heartbeat"), "Invalid MessageType received");
             continue;
@@ -236,10 +239,10 @@ void Heartbeat::handleClientMessages() {
 
         switch (messageType) {
             case MessageType::REQUEST_CONNECTION:
-                processRequestConnection(buffer, receivedIp, len);
+                processRequestConnection(buffer.data(), receivedIp, len);
                 break;
             case MessageType::HEARTBEAT_MESSAGE:
-                processHeartbeatMessage(buffer, receivedIp);
+                processHeartbeatMessage(buffer.data(), receivedIp);
                 break;
             default:
                 RCLCPP_INFO(rclcpp::get_logger("Heartbeat"), "Unknown message type: %08x receivedIp: %s", messageType, receivedIp.c_str());

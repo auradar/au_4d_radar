@@ -71,8 +71,20 @@ if(NOT WIN32)
     "${ament_cmake_package_templates_ENVIRONMENT_HOOK_LIBRARY_PATH}")
 endif()
 
+add_library(listener_component SHARED
+  src/listener_component.cpp)
+target_compile_definitions(listener_component
+  PRIVATE "COMPOSITION_BUILDING_DLL")
+ament_target_dependencies(listener_component
+  "rclcpp"
+  "rclcpp_components"
+  "radar_msgs")
+rclcpp_components_register_nodes(listener_component "au_4d_radar::Listener")
+set(node_plugins "${node_plugins}au_4d_radar::Listener;$<TARGET_FILE:listener_component>\n")
+
 install(TARGETS
   device_au_radar_node
+  listener_component  
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin

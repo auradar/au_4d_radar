@@ -18,7 +18,6 @@
 
 #include "util/uuid_helper.hpp"
 #include "util/conversion.hpp"
-#include "util/yamlParser.hpp"
 #include "au_4d_radar.hpp"
 
 
@@ -39,43 +38,13 @@ struct tsPacketHeader
 namespace au_4d_radar
 {
 
-MessageParser::MessageParser(device_au_radar_node* node)
-    : radar_node_(node) { }
-
-void MessageParser::init() {
-    radarsMap_ = YamlParser::readRadarsAsMap();
-}
-
-std::string MessageParser::getFrameId(uint32_t radar_id) {
-    std::lock_guard<std::recursive_mutex> lock(parser_map_mutex_);
-    auto it = radarsMap_.find(radar_id);
-    if (it != radarsMap_.end()) {
-        return it->second;
-    } else {
-        return "";
-    }
-}
-
-bool MessageParser::checkValidFrameId(uint32_t radar_id) {
-#if 1
-    std::lock_guard<std::recursive_mutex> lock(parser_map_mutex_);
-    auto it = radarsMap_.find(radar_id);
-    if (it != radarsMap_.end()) {
-        return true;
-    } else {
-        return false;
-    }
-#else  // not check
-        return true;
-#endif
-}
-
 void MessageParser::makeRadarPointCloud2Msg(uint8_t *p_buff, sensor_msgs::msg::PointCloud2& cloud_msg, bool& complete) {
     std::lock_guard<std::mutex> lock(mtx_point_cloud2);
     uint32_t idx = 0;
     tsPacketHeader header = {};
     std::stringstream ss;
-    const double deg2rad = 3.141592 / 180.0;
+    const double deg2rad = M_PI / 180.0f;
+    static constexpr size_t POINT_STEP_SIZE = 16;
 
     header.ui32UID = Conversion::littleEndianToUint32(&p_buff[idx]);
     idx += 4;
@@ -97,64 +66,48 @@ void MessageParser::makeRadarPointCloud2Msg(uint8_t *p_buff, sensor_msgs::msg::P
     idx += 2;
 
     if(header.ui32PN > 60 ||  header.ui32TPN > 1600 || header.ui16TPCKN > 28 || header.ui16PCKN > 28) {
-        RCLCPP_ERROR(rclcpp::get_logger("point_cloud2_msg"), "Failed to decode  frame_id %s FN %u TPN %u PN %u TPCKN %u PCKN %u",
+        RCLCPP_ERROR(rclcpp::get_logger("point_cloud2_msg"), "Failed to decode  radar_id %s FN %u TPN %u PN %u TPCKN %u PCKN %u",
                         frame_id_.c_str(), header.ui32FN, header.ui32TPN, header.ui32PN, header.ui16TPCKN, header.ui16PCKN);
         return;
     }
 
-    complete = (header.ui16TPCKN == header.ui16PCKN);
-
-      // https://github.com/ros2/common_interfaces/blob/rolling/std_msgs/msg/Header.msg
-      //sequence_id_ = header.ui32FN;
-    // ss << std::hex << std::setw(8) << std::setfill('0') << header.ui32UID;
-    // frame_id_ = YamlParser::readFrameId(ss.str());
-    frame_id_ = getFrameId(header.ui32UID);
+    // https://github.com/ros2/common_interfaces/blob/rolling/std_msgs/msg/Header.msg
+    frame_id_ = YamlParser::getFrameId(header.ui32UID);
     if(frame_id_.empty()) {
         ss << std::hex << std::setw(8) << std::setfill('0') << header.ui32UID;
         frame_id_ = ss.str();
     }
 
+    complete = (header.ui16TPCKN == header.ui16PCKN);
+
     stamp_tv_sec_ = header.ui32TS;
     stamp_tv_nsec_ = header.ui32TN;
 
-    // RCLCPP_INFO(rclcpp::get_logger("point_cloud2"), "frame_id %s FN %u TPN %u PN %u TPCKN %u PCKN %u", 
-    //              frame_id_.c_str(), header.ui32FN, header.ui32TPN, header.ui32PN, header.ui16TPCKN, header.ui16PCKN); 
+    // RCLCPP_INFO(rclcpp::get_logger("point_cloud2"), "radar_id %s FN %u TPN %u PN %u TPCKN %u PCKN %u",
+    //              frame_id_.c_str(), header.ui32FN, header.ui32TPN, header.ui32PN, header.ui16TPCKN, header.ui16PCKN);
 
     // https://github.com/ros2/common_interfaces/blob/rolling/sensor_msgs/msg/PointCloud2.msg
-    cloud_msg.header.frame_id = frame_id_;
-    cloud_msg.header.stamp.sec = stamp_tv_sec_;
-    cloud_msg.header.stamp.nanosec = stamp_tv_nsec_; //stamp_tv_nsec_; header.ui32FN;
-
-    cloud_msg.height = 1;  // Unordered point cloud, height = 1
-    cloud_msg.width = header.ui32PN;
-    cloud_msg.fields.resize(4);
-
-    cloud_msg.fields[0].name     = "x";
-    cloud_msg.fields[0].offset   = 0;
-    cloud_msg.fields[0].datatype = sensor_msgs::msg::PointField::FLOAT32;
-    cloud_msg.fields[0].count    = 1;
-
-    cloud_msg.fields[1].name = "y";
-    cloud_msg.fields[1].offset = 4;
-    cloud_msg.fields[1].datatype = sensor_msgs::msg::PointField::FLOAT32;
-    cloud_msg.fields[1].count = 1;
-
-    cloud_msg.fields[2].name = "z";
-    cloud_msg.fields[2].offset = 8;
-    cloud_msg.fields[2].datatype = sensor_msgs::msg::PointField::FLOAT32;
-    cloud_msg.fields[2].count = 1;
-
-    cloud_msg.fields[3].name = "intensity";
-    cloud_msg.fields[3].offset = 12;
-    cloud_msg.fields[3].datatype = sensor_msgs::msg::PointField::FLOAT32;
-    cloud_msg.fields[3].count = 1;
-
-    cloud_msg.is_bigendian = false;
-    cloud_msg.point_step = 16;  // Each point has 4 fields, each 4 bytes (float)
-    cloud_msg.row_step = cloud_msg.point_step * cloud_msg.width;
-    cloud_msg.is_dense = true;
-
-    cloud_msg.data.resize(cloud_msg.row_step * cloud_msg.height);
+    if (header.ui16PCKN == 1) {
+        cloud_msg.header.frame_id = frame_id_;
+        cloud_msg.header.stamp.sec = stamp_tv_sec_;
+        cloud_msg.header.stamp.nanosec = stamp_tv_nsec_;
+        cloud_msg.height = 1;
+        cloud_msg.width = header.ui32TPN;  // Width is total points over all packets
+        cloud_msg.is_bigendian = false;
+        cloud_msg.point_step = POINT_STEP_SIZE;
+        cloud_msg.row_step = cloud_msg.point_step * cloud_msg.width;
+        cloud_msg.is_dense = true;
+        cloud_msg.fields.resize(4);
+        cloud_msg.fields[0].name = "x";  cloud_msg.fields[0].offset = 0;
+        cloud_msg.fields[0].datatype = sensor_msgs::msg::PointField::FLOAT32; cloud_msg.fields[0].count = 1;
+        cloud_msg.fields[1].name = "y";  cloud_msg.fields[1].offset = 4;
+        cloud_msg.fields[1].datatype = sensor_msgs::msg::PointField::FLOAT32; cloud_msg.fields[1].count = 1;
+        cloud_msg.fields[2].name = "z";  cloud_msg.fields[2].offset = 8;
+        cloud_msg.fields[2].datatype = sensor_msgs::msg::PointField::FLOAT32; cloud_msg.fields[2].count = 1;
+        cloud_msg.fields[3].name = "intensity"; cloud_msg.fields[3].offset = 12;
+        cloud_msg.fields[3].datatype = sensor_msgs::msg::PointField::FLOAT32; cloud_msg.fields[3].count = 1;
+        cloud_msg.data.clear();
+    }
 
     for (uint32_t i = 0; i < header.ui32PN; i++) {
         // uint32_t index = Conversion::littleEndianToUint32(&p_buff[idx]);
@@ -181,11 +134,16 @@ void MessageParser::makeRadarPointCloud2Msg(uint8_t *p_buff, sensor_msgs::msg::P
 
         // RCLCPP_INFO(rclcpp::get_logger("point_cloud2"), "index %u x %f y %f z %f intensity %f", index, x, y, z, intensity);
 
-        uint8_t* ptr = &cloud_msg.data[i * cloud_msg.point_step];
-        memcpy(ptr + cloud_msg.fields[0].offset, &x, sizeof(float));
-        memcpy(ptr + cloud_msg.fields[1].offset, &y, sizeof(float));
-        memcpy(ptr + cloud_msg.fields[2].offset, &z, sizeof(float));
-        memcpy(ptr + cloud_msg.fields[3].offset, &intensity, sizeof(float));
+        uint8_t point_data[POINT_STEP_SIZE];
+        memcpy(point_data, &x, sizeof(float));
+        memcpy(point_data + 4, &y, sizeof(float));
+        memcpy(point_data + 8, &z, sizeof(float));
+        memcpy(point_data + 12, &intensity, sizeof(float));
+        cloud_msg.data.insert(cloud_msg.data.end(), point_data, point_data + POINT_STEP_SIZE);
+    }
+
+    if (complete) {
+        cloud_msg.width = cloud_msg.data.size() / cloud_msg.point_step;
     }
 
 }
@@ -216,29 +174,25 @@ void MessageParser::makeRadarScanMsg(uint8_t *p_buff, radar_msgs::msg::RadarScan
     idx += 2;
 
     if(header.ui32PN > 60 ||  header.ui32TPN > 1600 || header.ui16TPCKN > 28 || header.ui16PCKN > 28) {
-        RCLCPP_ERROR(rclcpp::get_logger("radar_scan"), "Failed to decode  frame_id %s FN %u TPN %u PN %u TPCKN %u PCKN %u",
+        RCLCPP_ERROR(rclcpp::get_logger("radar_scan"), "Failed to decode  radar_id %s FN %u TPN %u PN %u TPCKN %u PCKN %u",
                         frame_id_.c_str(), header.ui32FN, header.ui32TPN, header.ui32PN, header.ui16TPCKN, header.ui16PCKN);
         return;
     }
 
-    complete = (header.ui16TPCKN == header.ui16PCKN);
-
      // https://github.com/ros2/common_interfaces/blob/rolling/std_msgs/msg/Header.msg
-     //sequence_id_ = header.ui32FN;
-
-    // ss << std::hex << std::setw(8) << std::setfill('0') << header.ui32UID;
-    // frame_id_ = YamlParser::readFrameId(ss.str());
-    frame_id_ = getFrameId(header.ui32UID);
+    frame_id_ = YamlParser::getFrameId(header.ui32UID);
     if(frame_id_.empty()) {
         ss << std::hex << std::setw(8) << std::setfill('0') << header.ui32UID;
         frame_id_ = ss.str();
     }
 
+    complete = (header.ui16TPCKN == header.ui16PCKN);
+
     stamp_tv_sec_ = header.ui32TS;
     stamp_tv_nsec_ = header.ui32TN;
 
-    // std::cout << "frame_id "<< std::hex << header.ui32UID << std::endl;
-//    RCLCPP_INFO(rclcpp::get_logger("radar_scan"), "frame_id %08x %s FN %u TPN %u PN %u TPCKN %u PCKN %u",
+    // std::cout << "radar_id "<< std::hex << header.ui32UID << std::endl;
+//    RCLCPP_INFO(rclcpp::get_logger("radar_scan"), "radar_id %08x %s FN %u TPN %u PN %u TPCKN %u PCKN %u",
 //                                                header.ui32UID, frame_id_.c_str(), header.ui32FN, header.ui32TPN, header.ui32PN, header.ui16TPCKN, header.ui16PCKN);
 
     radar_scan_msg.header.frame_id = frame_id_;
@@ -261,8 +215,8 @@ void MessageParser::makeRadarScanMsg(uint8_t *p_buff, radar_msgs::msg::RadarScan
         return_msg.amplitude = Conversion::convertToFloat(&p_buff[idx]);
         idx += 4;
 
-        // RCLCPP_INFO(rclcpp::get_logger("RadarScan"), "index %u range %f velocity %f azimuth %f elevation %f amplitude %f", 
-        //                                                 index, return_msg.range, return_msg.doppler_velocity, return_msg.azimuth, return_msg.elevation, return_msg.amplitude); 
+        // RCLCPP_INFO(rclcpp::get_logger("RadarScan"), "index %u range %f velocity %f azimuth %f elevation %f amplitude %f",
+        //                                                 index, return_msg.range, return_msg.doppler_velocity, return_msg.azimuth, return_msg.elevation, return_msg.amplitude);
 
         radar_scan_msg.returns.push_back(return_msg);
     }
@@ -285,7 +239,7 @@ void MessageParser::makeRadarTracksMsg(uint8_t *p_buff, radar_msgs::msg::RadarTr
     radar_tracks_msg.header.stamp.sec = stamp_tv_sec_;
     radar_tracks_msg.header.stamp.nanosec = stamp_tv_nsec_;
 
-    RCLCPP_INFO(rclcpp::get_logger("radar_tracks_msg"), "radar tracks msg message frame_id: %s", frame_id_.c_str()); 
+    RCLCPP_INFO(rclcpp::get_logger("radar_tracks_msg"), "radar tracks msg message radar_id: %s", frame_id_.c_str());
 
     for(int i = 0; i < 3; i++)
     {

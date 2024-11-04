@@ -15,6 +15,8 @@
 #include <ament_index_cpp/get_package_share_directory.hpp>
 #include "util/yamlParser.hpp"
 
+std::unordered_map<uint32_t, std::string> YamlParser::radarsMap_;
+std::recursive_mutex YamlParser::radar_map_mutex_;
 
 std::string YamlParser::readHostname(const std::string& key) {
     try {
@@ -48,6 +50,23 @@ bool YamlParser::readPointCloud2Setting(const std::string& key) {
     } catch (const YAML::Exception& e) {
         RCLCPP_ERROR(rclcpp::get_logger("readPointCloud2Setting"), "Error reading YAML file: %s", e.what());
         return false;
+    }
+}
+
+uint32_t YamlParser::readMessageNumber(const std::string& key) {
+    try {
+        std::string yaml_file_path = ament_index_cpp::get_package_share_directory("au_4d_radar") + "/config/system_info.yaml";
+        YAML::Node config = YAML::LoadFile(yaml_file_path);
+
+        if (config[key]) {
+            return config[key].as<uint32_t>();
+        } else {
+            RCLCPP_ERROR(rclcpp::get_logger("readMessageNumber"), "Key '%s' not found in system_info.yaml", key.c_str());
+            return 1;
+        }
+    } catch (const YAML::Exception& e) {
+        RCLCPP_ERROR(rclcpp::get_logger("readMessageNumber"), "Error reading YAML file: %s", e.what());
+        return 1;
     }
 }
 
@@ -110,3 +129,29 @@ std::unordered_map<uint32_t, std::string> YamlParser::readRadarsAsMap() {
 
     return radars_map;
 }
+
+void YamlParser::init() {
+    radarsMap_ = readRadarsAsMap();
+}
+
+std::string YamlParser::getFrameId(uint32_t radar_id) {
+    std::lock_guard<std::recursive_mutex> lock(radar_map_mutex_);
+    auto it = radarsMap_.find(radar_id);
+    if (it != radarsMap_.end()) {
+        return it->second;
+    } else {
+        return "";
+    }
+}
+
+bool YamlParser::checkValidFrameId(uint32_t radar_id) {
+    std::lock_guard<std::recursive_mutex> lock(radar_map_mutex_);
+    auto it = radarsMap_.find(radar_id);
+    if (it != radarsMap_.end()) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+

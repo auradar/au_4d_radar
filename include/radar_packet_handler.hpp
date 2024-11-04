@@ -27,7 +27,7 @@
 #include <map>
 
 #include "message_parse.hpp"
-// #include "heart_beat.hpp"
+
 
 namespace au_4d_radar
 {
@@ -46,20 +46,27 @@ namespace au_4d_radar
 
     private:
         bool initialize();
-        void receiveMessages();
         void receiveMessagesTwoQueues();
         void processMessages();
         void processClientMessages(uint32_t unique_id);
+        void processPerFrameForAllSensor();
+        void handleRadarScanMessage(std::vector<uint8_t>& buffer, radar_msgs::msg::RadarScan& radar_scan_msg,
+                sensor_msgs::msg::PointCloud2& radar_cloud_msg, std::deque<sensor_msgs::msg::PointCloud2>& radar_cloud_buffer);
+        void assemblePointCloud(std::deque<sensor_msgs::msg::PointCloud2>& radar_cloud_buffer,
+                const sensor_msgs::msg::PointCloud2& radar_cloud_msg, sensor_msgs::msg::PointCloud2& multiple_cloud_messages);
+        void handleRadarTrackMessage(std::vector<uint8_t>& buffer, radar_msgs::msg::RadarTracks& radar_tracks_msg);
 
         int rd_sockfd;
         device_au_radar_node* radar_node_;
         std::atomic<bool> receive_running;
         std::atomic<bool> process_running;
         std::atomic<bool> process_runnings;
-        std::atomic<bool> point_cloud2_setting;
-
+        bool point_cloud2_setting_;
+        uint32_t message_number_;
+        
         std::thread receive_thread_;
         std::thread process_thread_;
+
         std::queue<std::vector<uint8_t>> message_queue_;
         std::mutex queue_mutex_;
         std::condition_variable queue_cv_;
@@ -73,6 +80,12 @@ namespace au_4d_radar
         std::unordered_map<uint32_t, std::queue<std::vector<uint8_t>>> client_message_queues_;
         std::mutex client_queue_mutex_;
         std::unordered_map<uint32_t, std::condition_variable> client_queue_cvs_;
+
+        std::mutex publish_mutex_;
+        std::mutex parse_mutex_;
+
+        static constexpr size_t mTsPacketHeaderSize = 36UL;
+
     };
 }
 
