@@ -1,14 +1,3 @@
-/**
- * @file heart_beat.hpp
- * @author Antonio Ko(antonioko@au-sensor.com)
- * @brief Supports automatic connection and communication functions without having to set the IP of each component in a local network environment
- * @version 1.0
- * @date 2024-09-11
- * 
- * @copyright Copyright AU (c) 2024
- * 
- */
-
 #ifndef HEART_BEAT_INCLUDE_H
 #define HEART_BEAT_INCLUDE_H
 
@@ -63,6 +52,7 @@ namespace au_4d_radar
 
         device_au_radar_node* radar_node_;
     };
-}
+
+} // namespace au_4d_radar
 
 #endif // HEART_BEAT_INCLUDE_H

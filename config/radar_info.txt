@@ -8,27 +8,27 @@ client_hostname: auradar-eeeeeeee
 # RADAR_REAR_LEFT 78000
 # RADAR_FRONT_LEFT 79000
 
-  # BTS
+  # First assembly car
   9c281337:
     frame_id: RADAR_FRONT
-    xyz: [3.05, 0, 0.44]
-    rpy: [0, 0, -1.57] # -90   1.57 x 180 / 3.141592
+    xyz: [0, 0.5, 0]
+    rpy: [0, 0, -1.57] # -90 / 180 * 3.141592 = -1.57
   05d9f6e4:
     frame_id: RADAR_FRONT_RIGHT
-    xyz: [2.7, -0.85, 0.44]
-    rpy: [0, 0, -3.665] #  -210
+    xyz: [0, 0, 0]
+    rpy: [0, 0, -3.665] #  -210 / 180 * 3.141592 = -3.665
   5ff85500:
-    frame_id: RADAR_REAR_RIGHT
-    xyz: [-0.4, -0.85, 0.44]
-    rpy: [0, 0, 2.356] # 135
+    frame_id: RADAR_REAR_RIGHT # 180 rotation based on y axis
+    xyz: [0.5, -0.3, 0]
+    rpy: [0, 3.1416, 2.3562] # 135 / 180 * 3.141592 = 2.3562
   c0a4ab10:
     frame_id: RADAR_REAR_LEFT
-    xyz: [-0.4, 0.73, 0.44]
-    rpy: [0, 0, -0.78545] # 45
+    xyz: [-0.5, -0.3, 0]
+    rpy: [0, 0, 0.78545] # 45 / 180 * 3.141592 = 0.78545
   610ddb0e:
-    frame_id: RADAR_FRONT_LEFT
-    xyz: [2.7, 0.73, 0.44]
-    rpy: [0, 0, 0.5236] # 30
+    frame_id: RADAR_FRONT_LEFT # 180 rotation based on y axis
+    xyz: [-0.5, 0.3, 0]
+    rpy: [0, 3.1416, 0.5236] # 30 / 180 * 3.141592 = 0.5236
 
   # LG-E
   0dd98aa5:
@@ -52,42 +52,28 @@ client_hostname: auradar-eeeeeeee
     xyz: [2.7, 0.73, 0.44]
     rpy: [0, 0, 0.5236] # 30
 
-  # Test
-  dabcdef0: RADAR0
-  dabcdef1: RADAR0
-  dabcdef2: RADAR2
-  dabcdef3: RADAR3
-  dabcdef4: RADAR4
-  dabcdef5: RADAR5
-
-  # Test 2
-  2a3dc654: RADAR1
-  273196c2: RADAR2
-  27c06058: RADAR3
-  0ade0aae: RADAR4
-  000ef7e5: RADAR5
 
   # Test 3
-  2a3dc654:
+  f54b9bce:
     frame_id: RADAR_FRONT
     xyz: [0, 0.5, 0]
-    rpy: [0, 0, -1.57] # -90 / 180 * 3.141592 = -1.57
-  916b3915: # 2a3dc654
+    rpy: [0, 0, -1.57] # -90 / 180 * 3.141592
+  916b3915:
     frame_id: RADAR_FRONT_RIGHT
     xyz: [0, 0, 0]
-    rpy: [0, 0, -3.665] #  -210 / 180 * 3.141592 = -3.665
-  f54b9bce:
-    frame_id: RADAR_REAR_RIGHT # 180 rotation based on xy axis
+    rpy: [0, 0, -2.8274] #  -162 / 180 * 3.141592
+  2a3dc654:
+    frame_id: RADAR_REAR_RIGHT # 180 rotation based on y axis
     xyz: [0.5, -0.3, 0]
-    rpy: [0, 0, 2.3562] # 135 / 180 * 3.141592 = 2.3562
+    rpy: [0, 3.1416, 2.199] # 126 / 180 * 3.141592
   90787b2c:
     frame_id: RADAR_REAR_LEFT
     xyz: [-0.5, -0.3, 0]
-    rpy: [0, 0, 0.78545] # 45 / 180 * 3.141592 = 0.78545
+    rpy: [0, 0, 0.94247] # 54 / 180 * 3.141592
   3207df55:
-    frame_id: RADAR_FRONT_LEFT # 180 rotation based on xy axis
+    frame_id: RADAR_FRONT_LEFT # 180 rotation based on y axis
     xyz: [-0.5, 0.3, 0]
-    rpy: [0, 0, 0.5236] # 30 / 180 * 3.141592 = 0.5236
+    rpy: [0, 3.1416, 0.3141592] # -18 / 180 * 3.141592
 
   # Test 4
   27c06058:
@@ -110,4 +96,71 @@ client_hostname: auradar-eeeeeeee
     frame_id: RADAR_FRONT_LEFT
     xyz: [2.7, 0.73, 0.44]
     rpy: [0, 0, 0.5236] # 30
+
+  # 2nd assembly Car
+  f54b9bce:
+    frame_id: RADAR_FRONT
+    xyz: [1.665, -0.189, 0.0249]
+    rpy: [0, 0, 0]
+  916b3915:
+    frame_id: RADAR_FRONT_RIGHT
+    xyz: [1.546, -1.002, 0.849]
+    rpy: [0, 0, -2.0944] #  -120 / 180 * 3.141592
+  2a3dc654:
+    frame_id: RADAR_REAR_RIGHT # 180 rotation based on y axis
+    xyz: [-1.797, -0.990, 0.0849]
+    rpy: [0, 3.1416, -2.0944] # -120 / 180 * 3.141592
+  90787b2c:
+    frame_id: RADAR_REAR_LEFT
+    xyz: [-1.797, 0.612, 0.0849]
+    rpy: [0, 0, 2.0944] # 120 / 180 * 3.141592
+  3207df55:
+    frame_id: RADAR_FRONT_LEFT # 180 rotation based on y axis
+    xyz: [1.546, 0.624, 0.0849]
+    rpy: [0, 3.1416, 2.0944] # 120 / 180 * 3.141592
+
+  # AU CAR
+  0dd98aa5:
+    frame_id: RADAR_FRONT
+    xyz: [1.665, -0.189, 0.0249]
+    rpy: [0, 0, 0]
+  564d6b80:
+    frame_id: RADAR_FRONT_RIGHT
+    xyz: [1.546, -1.002, 0.0849]
+    rpy: [0, 0, -2.0944] #  -120 / 180 * 3.141592
+  2812b707:
+    frame_id: RADAR_REAR_RIGHT # 180 rotation based on y axis
+    xyz: [-1.797, -0.990, 0.0849]
+    rpy: [0, 3.1416, -2.0944] # -120 / 180 * 3.141592
+  2f7e83f9:
+    frame_id: RADAR_REAR_LEFT
+    xyz: [-1.797, 0.612, 0.0849]
+    rpy: [0, 0, 2.0944] # 120 / 180 * 3.141592
+  2d12af50:
+    frame_id: RADAR_FRONT_LEFT # 180 rotation based on y axis
+    xyz: [1.546, 0.624, 0.0849]
+    rpy: [0, 0, 2.0944] # 120 / 180 * 3.141592
+
+  # Pentagon Jig
+  0dd98aa5:
+    frame_id: RADAR_FRONT
+    xyz: [0.15, 0, 0]
+    rpy: [0, 0, 0]
+  564d6b80:
+    frame_id: RADAR_FRONT_RIGHT
+    xyz: [0.1, -0.1, 0]
+    rpy: [0, 0, -1.2566] #  -72 / 180 * 3.141592
+  2812b707:
+    frame_id: RADAR_REAR_RIGHT # 180 rotation based on y axis
+    xyz: [-0.1, -0.1, 0]
+    rpy: [0, 3.1416, -2.51327] # -144 / 180 * 3.141592
+  2f7e83f9:
+    frame_id: RADAR_REAR_LEFT
+    xyz: [-0.1, 0.1, 0]
+    rpy: [0, 0, 2.51327] # 144 / 180 * 3.141592
+  2d12af50:
+    frame_id: RADAR_FRONT_LEFT # 180 rotation based on y axis
+    xyz: [0.1, 0.1, 0]
+    rpy: [0, 3.1416, 1.2566] # 72 / 180 * 3.141592
+
 

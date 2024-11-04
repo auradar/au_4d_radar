@@ -3,8 +3,7 @@
   <name>au_4d_radar</name>
   <version>1.0.0</version>
   <description>AU 4D radar node</description>
-  <maintainer email="kisoo.kim@au-sensor.com">kisoo.kim</maintainer>
-
+  <maintainer email="antonioko@au-sensor.com">hyunil.ko</maintainer>
   <license>Apache License 2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>

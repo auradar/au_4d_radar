@@ -26,6 +26,9 @@ find_package(yaml-cpp REQUIRED)
 find_package(flatbuffers REQUIRED)
 find_package(ament_index_cpp REQUIRED)
 find_package(Eigen3 REQUIRED)
+find_package(tf2_ros REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(urdf REQUIRED)
 
 include_directories(include)
 
@@ -37,7 +40,8 @@ add_library(device_au_radar_node SHARED
   src/util/yamlParser.cpp
   src/message_parse.cpp
   src/radar_packet_handler.cpp
-  src/heart_beat.cpp)
+  src/heart_beat.cpp
+  src/adm_tf_listener.cpp)
 
 target_compile_definitions(device_au_radar_node
   PRIVATE "COMPOSITION_BUILDING_DLL")
@@ -61,6 +65,9 @@ ament_target_dependencies(device_au_radar_node
   "radar_msgs"
   "mon_msgs"
   "ament_index_cpp"
+  "tf2_ros"
+  "geometry_msgs"
+  "urdf"
   )
 
 rclcpp_components_register_nodes(device_au_radar_node "au_4d_radar::device_au_radar_node")

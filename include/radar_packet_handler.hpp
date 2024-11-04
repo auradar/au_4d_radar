@@ -1,14 +1,3 @@
-/**
- * @file radar_packet_handler.hpp
- * @author Antonio Ko(antonioko@au-sensor.com)
- * @brief Implementation of the radar_data_handler class for processing incoming radar data.
- * @version 1.1
- * @date 2024-09-05
- *
- * @copyright Copyright AU (c) 2024
- *
- */
-
 #ifndef RADAR_PACKET_HANDLER_INCLUDE_H
 #define RADAR_PACKET_HANDLER_INCLUDE_H
 
@@ -27,7 +16,6 @@
 #include <map>
 
 #include "message_parse.hpp"
-// #include "heart_beat.hpp"
 
 namespace au_4d_radar
 {
@@ -46,13 +34,17 @@ namespace au_4d_radar
 
     private:
         bool initialize();
-        void receiveMessages();
         void receiveMessagesTwoQueues();
         void processMessages();
         void processClientMessages(uint32_t unique_id);
         void processPerFrameForAllSensor();
         void handleRadarScanMessage(std::vector<uint8_t>& buffer, radar_msgs::msg::RadarScan& radar_scan_msg,
-                                                sensor_msgs::msg::PointCloud2& radar_cloud_msg);        
+                sensor_msgs::msg::PointCloud2& radar_cloud_msg, std::deque<sensor_msgs::msg::PointCloud2>& radar_cloud_buffer);
+        void assemblePointCloud(std::deque<sensor_msgs::msg::PointCloud2>& radar_cloud_buffer,
+                const sensor_msgs::msg::PointCloud2& radar_cloud_msg, sensor_msgs::msg::PointCloud2& multiple_cloud_messages);
+        void mergePointCloud(const sensor_msgs::msg::PointCloud2& multiple_cloud_messages,
+                sensor_msgs::msg::PointCloud2& radar_cloud_msgs);
+        bool isNewTimeSync(uint32_t time_sync_cloud);
         void handleRadarTrackMessage(std::vector<uint8_t>& buffer, radar_msgs::msg::RadarTracks& radar_tracks_msg);
 
         int rd_sockfd;
@@ -60,11 +52,12 @@ namespace au_4d_radar
         std::atomic<bool> receive_running;
         std::atomic<bool> process_running;
         std::atomic<bool> process_runnings;
-        std::atomic<bool> point_cloud2_setting;
+        bool point_cloud2_setting_;
+        uint32_t message_number_;
 
         std::thread receive_thread_;
         std::thread process_thread_;
-  
+
         std::queue<std::vector<uint8_t>> message_queue_;
         std::mutex queue_mutex_;
         std::condition_variable queue_cv_;
@@ -78,17 +71,16 @@ namespace au_4d_radar
         std::unordered_map<uint32_t, std::queue<std::vector<uint8_t>>> client_message_queues_;
         std::mutex client_queue_mutex_;
         std::unordered_map<uint32_t, std::condition_variable> client_queue_cvs_;
-   
-        radar_msgs::msg::RadarScan radar_scan_msgs;
-        sensor_msgs::msg::PointCloud2 radar_cloud_msgs;
-        std::mutex copy_mutex_scan;
-        std::mutex copy_mutex_cloud;
-        uint8_t time_sync_scan;
-        uint8_t time_sync_pre_scan;
-        uint8_t time_sync_cloud;
-        uint8_t time_sync_pre_cloud;
 
+        //radar_msgs::msg::RadarScan radar_scan_msgs;
+        sensor_msgs::msg::PointCloud2 radar_cloud_msgs;
+        std::mutex publish_mutex_;
+        std::mutex parse_mutex_;
+        uint8_t time_sync_pre_cloud_;
+
+        static constexpr size_t mTsPacketHeaderSize = 36UL;
     };
-}
+
+} // namespace au_4d_radar
 
 #endif  // RADAR_PACKET_HANDLER_INCLUDE_H

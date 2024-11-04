@@ -1,14 +1,3 @@
-/**
- * @file message_parse.hpp
- * @author antonioko@au-sensor.com, kisoo.kim@au-sensor.com
- * @brief Implementation of the MessageParser class for parsing radar data.
- * @version 1.0
- * @date 2024-08-23
- *
- * @copyright Copyright AU (c) 2024
- *
- */
-
 #ifndef MESSAGE_PARSE_HPP
 #define MESSAGE_PARSE_HPP
 
@@ -28,41 +17,30 @@
 
 namespace au_4d_radar
 {
+class MessageParser
+{
+public:
+    MessageParser()  = default;
+    ~MessageParser() = default;
 
-    class device_au_radar_node;
-    class MessageParser
-    {
-    public:
-        MessageParser(device_au_radar_node* node);
-        MessageParser()  = default;
-        ~MessageParser() = default;
-        void init();
+    void parsePointCloud2Msg(uint8_t *p_buff, sensor_msgs::msg::PointCloud2& radar_cloud_msg, bool& complete);
+    void parseRadarScanMsg(uint8_t *p_buff, radar_msgs::msg::RadarScan& radar_scan_msg, bool& complete);
+    void parseRadarTrackMsg(uint8_t *p_buff, radar_msgs::msg::RadarTracks& radar_tracks_msg, bool& complete);
 
-        void parsePointCloud2Msg(uint8_t *p_buff, sensor_msgs::msg::PointCloud2& radar_cloud_msg, bool& complete);
-        void parseRadarScanMsg(uint8_t *p_buff, radar_msgs::msg::RadarScan& radar_scan_msg, bool& complete);
-        void parseRadarTrackMsg(uint8_t *p_buff, radar_msgs::msg::RadarTracks& radar_tracks_msg, bool& complete);
-        bool checkValidFrameId(uint32_t radar_id);
+private:
+    void makeRadarPointCloud2Msg(uint8_t *p_buff, sensor_msgs::msg::PointCloud2& cloud_msg, bool& complete);
+    void makeRadarScanMsg(uint8_t *p_buff, radar_msgs::msg::RadarScan& radar_scan_msg, bool& complete);
+    void makeRadarTracksMsg(uint8_t *p_buff, radar_msgs::msg::RadarTracks& radar_tracks_msg, bool& complete);
 
-    private:
-        void makeRadarPointCloud2Msg(uint8_t *p_buff, sensor_msgs::msg::PointCloud2& cloud_msg, bool& complete);
-        void makeRadarScanMsg(uint8_t *p_buff, radar_msgs::msg::RadarScan& radar_scan_msg, bool& complete);
-        void makeRadarTracksMsg(uint8_t *p_buff, radar_msgs::msg::RadarTracks& radar_tracks_msg, bool& complete);
-        std::string getFrameIdName(uint32_t radar_id);
-        RadarInfo getRadarInfo(uint32_t frame_id);
+    uint32_t sequence_id_;
+    std::string frame_id_;
+    uint32_t stamp_tv_sec_;
+    uint32_t stamp_tv_nsec_;
+    std::mutex mtx_point_cloud2;
+    std::mutex mtx_radar_scan;
+    std::mutex mtx_radar_track;
+};
 
-        uint32_t sequence_id_;
-        std::string frame_id_;
-        uint32_t stamp_tv_sec_;
-        uint32_t stamp_tv_nsec_;
-        std::mutex mtx_point_cloud2;
-        std::mutex mtx_radar_scan;
-        std::mutex mtx_radar_track;
-        std::recursive_mutex yaml_map_mutex_;
-        std::unordered_map<uint32_t, RadarInfo> radarsMap_;
-
-        device_au_radar_node* radar_node_;
-    };
-
-}
+} // namespace au_4d_radar
 
 #endif // MESSAGE_PARSE_HPP
