@@ -20,9 +20,7 @@ v2.2
 - Added CRC to heartbeat message (Auto Connection between RADAR Sensors and RADAR Component)
 - Development version (Field Integration not performed)
 
-v2.3
-- Radar Point Cloud2 message is published for each RADAR
-
-v3.0
+v3.0 (from 2.2)
+- Each point cloud message for multiple radars -> TF Publisher (converted) -> Subscriber (RVIZ)
 - Radar Point Cloud2 message is published for each RADAR
 - support to assemble point cloud messages into a single message
