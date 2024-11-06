@@ -142,15 +142,14 @@ void MessageParser::makeRadarPointCloud2Msg(uint8_t *p_buff, sensor_msgs::msg::P
         float x_local = range * std::cos(elevation * deg2rad) * std::sin(azimuth * deg2rad);
         float y_local = range * std::cos(elevation * deg2rad) * std::cos(azimuth * deg2rad);
         float z_local = range * std::sin(elevation * deg2rad);
-
+        float intensity = amplitude;
+        
         // Apply the radar's orientation and position to convert to the world frame
         Eigen::Vector3f point_local(x_local, y_local, z_local);
         Eigen::Vector3f point_world = rotation_matrix * point_local;
         float x = point_world.x() + radar_info.x;
         float y = point_world.y() + radar_info.y;
         float z = point_world.z() + radar_info.z;
-
-        float intensity = amplitude;
 
         // RCLCPP_INFO(rclcpp::get_logger("point_cloud2"), "index %u x %f y %f z %f intensity %f", index, x, y, z, intensity);
 

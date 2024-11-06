@@ -284,6 +284,8 @@ void RadarPacketHandler::handleRadarScanMessage(std::vector<uint8_t>& buffer, ra
             assemblePointCloud(radar_cloud_buffer, radar_cloud_msg, multiple_cloud_messages);
 
             uint32_t time_sync_cloud = radar_cloud_msg.header.stamp.nanosec / 10000000;
+            RCLCPP_INFO(rclcpp::get_logger("handleRadarScanMessage"), "id %s 50ms %02u", radar_cloud_msg.header.frame_id.c_str(), time_sync_cloud);
+
             if (isNewTimeSync(time_sync_cloud)) {
                 radar_node_->publishRadarPointCloud2(radar_cloud_msgs);
                 radar_cloud_msgs.data.clear();
