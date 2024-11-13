@@ -29,7 +29,29 @@ client_hostname: auradar-eeeeeeee
     frame_id: RADAR_FRONT_LEFT # 180 rotation based on y axis
     xyz: [1.546, 0.624, 0.0849]
     rpy: [0, 3.1416, 2.0944] # 120 / 180 * 3.141592
-    
+
+    # Pentagon Jig
+  0dd98aa5:
+    frame_id: RADAR_FRONT
+    xyz: [1.665, -0.189, 0.0249]
+    rpy: [0, 0, 0]
+  564d6b80:
+    frame_id: RADAR_FRONT_RIGHT
+    xyz: [1.546, -1.002, 0.0849]
+    rpy: [0, 0, -2.0944] #  -120 / 180 * 3.141592
+  2812b707:
+    frame_id: RADAR_REAR_RIGHT # 180 rotation based on y axis
+    xyz: [-1.797, -0.990, 0.0849]
+    rpy: [0, 3.1416, -2.0944] # -120 / 180 * 3.141592
+  2f7e83f9:
+    frame_id: RADAR_REAR_LEFT
+    xyz: [-1.797, 0.612, 0.0849]
+    rpy: [0, 0, 2.0944] # 120 / 180 * 3.141592
+  2d12af50:
+    frame_id: RADAR_FRONT_LEFT # 180 rotation based on y axis
+    xyz: [1.546, 0.624, 0.0849]
+    rpy: [0, 3.1416, 2.0944] # 120 / 180 * 3.1415921
+
   # LG-E
   0dd98aa5:
     frame_id: RADAR_FRONT
