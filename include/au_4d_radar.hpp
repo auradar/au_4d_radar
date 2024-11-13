@@ -1,13 +1,3 @@
-/**
- * @file au_4d_radar.hpp
- * @author antonioko@au-sensor.com
- * @version 1.0
- * @date 2024-09-11
- *
- * @copyright Copyright (c) 2024
- *
- */
-
 #ifndef AU_4D_RADAR_HPP
 #define AU_4D_RADAR_HPP
 
@@ -19,8 +9,7 @@
 
 #include "heart_beat.hpp"
 #include "radar_packet_handler.hpp"
-#include "message_parse.hpp"
-
+#include "adm_tf_listener.hpp"
 
 namespace au_4d_radar
 {
@@ -37,7 +26,7 @@ namespace au_4d_radar
 
         Heartbeat heart_beat_;
         RadarPacketHandler radar_handler_;
-        MessageParser message_parser_;
+        AdmTFListener adm_tf_listener_;
 
     private:
         template<typename Param>
@@ -54,16 +43,13 @@ namespace au_4d_radar
 
         rclcpp::TimerBase::SharedPtr timer_;
         rclcpp::TimerBase::SharedPtr timer_mon_;
-
-        std::mutex mtx_point_cloud2;
-        std::mutex mtx_radar_scan;
-        std::mutex mtx_radar_track;
-
+        std::mutex mtx_msg_publisher;
         static uint32_t temp_cnt;
 
         static device_au_radar_node* instance_;
     };
-}
+
+} // namespace au_4d_radar
 
 #endif  // AU_4D_RADAR_HPP
 

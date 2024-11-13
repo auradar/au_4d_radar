@@ -18,11 +18,10 @@ mkdir -p ~/share/ros2_ws/src
 **Download AU 4D Radar ROS2 Source code**:
 
 ```bash
-$ export VERSION=v2.x
 $ cd ~/share/ros2_ws/src
 $ git clone https://github.com/auradar/au_4d_radar.git
 $ cd au_4d_radar
-$ git checkout $VERSION
+$ git checkout v1x.x
 $ git submodule update --init --recursive
 ```
 
@@ -67,6 +66,11 @@ cmake .. -DCMAKE_BUILD_TYPE=Release \
 
 make -j$(nproc)
 sudo make install
+```
+
+### Install xacro :
+```bash
+sudo apt install ros-humble-xacro
 ```
 
 ### Install Eigen :

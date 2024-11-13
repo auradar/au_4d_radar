@@ -10,6 +10,7 @@
  */
 
 #include "au_4d_radar.hpp"
+#include "util/yamlParser.hpp"
 
 #define PUB_TIME 	10ms
 
@@ -19,13 +20,9 @@ device_au_radar_node* device_au_radar_node::instance_ = nullptr;
 
 device_au_radar_node::device_au_radar_node(const rclcpp::NodeOptions & options)
 : Node("device_au_radar_node", options),
-  heart_beat_(this), radar_handler_(this), message_parser_(this)
+  heart_beat_(this), radar_handler_(this), adm_tf_listener_(this)
 {
     instance_ = this;
-
-    // timer_ = this->create_wall_timer(
-    //     PUB_TIME,
-    //     std::bind(&device_au_radar_node::publish, this));
 
     // https://docs.ros2.org/foxy/api/rmw/types_8h.html
     rclcpp::QoS qos = rclcpp::SensorDataQoS();
@@ -46,6 +43,7 @@ device_au_radar_node::device_au_radar_node(const rclcpp::NodeOptions & options)
                     rclcpp::SensorDataQoS());
 
     initInterruptHandler();
+    YamlParser::init();
     heart_beat_.start();
     radar_handler_.start();
 
@@ -77,26 +75,26 @@ void device_au_radar_node::get_param(rclcpp::Node::SharedPtr nh, const std::stri
 }
 
 void device_au_radar_node::publishRadarScanMsg(radar_msgs::msg::RadarScan &radar_scan_msg) {
-    std::lock_guard<std::mutex> lock(mtx_radar_scan);
+    std::lock_guard<std::mutex> lock(mtx_msg_publisher);
     pub_radar_scan->publish(radar_scan_msg);
    //  RCLCPP_INFO(rclcpp::get_logger("radar_node"), "pub_radar_scan id %s 50ms %02u",
-    //     radar_scan_msg.header.frame_id.c_str(), radar_scan_msg.header.stamp.nanosec / 10000000);    
+    //     radar_scan_msg.header.frame_id.c_str(), radar_scan_msg.header.stamp.nanosec / 10000000);
 }
 
 void device_au_radar_node::publishRadarTrackMsg(radar_msgs::msg::RadarTracks &radar_tracks_msg) {
-    // std::lock_guard<std::mutex> lock(mtx_radar_track);
+    std::lock_guard<std::mutex> lock(mtx_msg_publisher);
     pub_radar_track->publish(radar_tracks_msg);
 }
 
 void device_au_radar_node::publishRadarPointCloud2(sensor_msgs::msg::PointCloud2& radar_cloud_msg) {
-    std::lock_guard<std::mutex> lock(mtx_point_cloud2);
+    std::lock_guard<std::mutex> lock(mtx_msg_publisher);
     pub_radar_point_cloud2->publish(radar_cloud_msg);
     RCLCPP_INFO(rclcpp::get_logger("radar_node"), "pub_radar_point_cloud2 id %s 50ms %02u",
-        radar_cloud_msg.header.frame_id.c_str(), radar_cloud_msg.header.stamp.nanosec / 10000000);    
-
+        radar_cloud_msg.header.frame_id.c_str(), radar_cloud_msg.header.stamp.nanosec / 10000000);
 }
 
 void device_au_radar_node::publishHeartbeat(mon_msgs::msg::RadarHealth& radar_health_msg) {
+    std::lock_guard<std::mutex> lock(mtx_msg_publisher);
     // RCLCPP_INFO(rclcpp::get_logger("radar_node"),
     // "pub_radar_mon hostname : %s status: %u tv_sec: %u",
     // radar_health_msg.client_hostname.c_str(), radar_health_msg.status, radar_health_msg.tv_sec);
@@ -106,9 +104,9 @@ void device_au_radar_node::publishHeartbeat(mon_msgs::msg::RadarHealth& radar_he
 int device_au_radar_node::initInterruptHandler(void) {
     signal(SIGINT, interruptHandler);
     signal(SIGHUP, interruptHandler);
-    signal(SIGKILL, interruptHandler);
     signal(SIGSEGV, interruptHandler);
-    signal(SIGTERM, interruptHandler);
+    // signal(SIGKILL, interruptHandler);
+    // signal(SIGTERM, interruptHandler);
     return 0;
 }
 
@@ -116,5 +114,4 @@ int device_au_radar_node::initInterruptHandler(void) {
 
 #include "rclcpp_components/register_node_macro.hpp"
 
-// Register the component with class_loader.
 RCLCPP_COMPONENTS_REGISTER_NODE(au_4d_radar::device_au_radar_node)

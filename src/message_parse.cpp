@@ -40,51 +40,13 @@ struct tsPacketHeader
 namespace au_4d_radar
 {
 
-MessageParser::MessageParser(device_au_radar_node* node)
-    : radar_node_(node) { }
-
-void MessageParser::init() {
-    radarsMap_ = YamlParser::readRadarsAsMap();
-}
-
-std::string MessageParser::getFrameIdName(uint32_t radar_id) {
-    std::lock_guard<std::recursive_mutex> lock(yaml_map_mutex_);
-    auto it = radarsMap_.find(radar_id);
-    if (it != radarsMap_.end()) {
-        return it->second.frame_id;
-    } else {
-        return "";
-    }
-}
-
-bool MessageParser::checkValidFrameId(uint32_t radar_id) {
-    std::lock_guard<std::recursive_mutex> lock(yaml_map_mutex_);
-    auto it = radarsMap_.find(radar_id);
-    if (it != radarsMap_.end()) {
-        return true;
-    } else {
-        return false;
-    }
-}
-
-RadarInfo MessageParser::getRadarInfo(uint32_t radar_id) {
-    std::lock_guard<std::recursive_mutex> lock(yaml_map_mutex_);
-    auto it = radarsMap_.find(radar_id);
-    if (it != radarsMap_.end()) {
-        return it->second;
-    } else {
-        // Return a default-constructed RadarInfo if not found
-        RCLCPP_WARN(rclcpp::get_logger("MessageParser"), "Radar with radar_id: %u not found", radar_id);
-        return RadarInfo(); // Empty/default RadarInfo
-    }
-}
-
 void MessageParser::makeRadarPointCloud2Msg(uint8_t *p_buff, sensor_msgs::msg::PointCloud2& cloud_msg, bool& complete) {
     std::lock_guard<std::mutex> lock(mtx_point_cloud2);
     uint32_t idx = 0;
     tsPacketHeader header = {};
     std::stringstream ss;
-    const double deg2rad = M_PI / 180.0f; // Degrees to radians conversion
+    const double deg2rad = M_PI / 180.0f;
+    static constexpr size_t POINT_STEP_SIZE = 16;
 
     header.ui32UID = Conversion::littleEndianToUint32(&p_buff[idx]);
     idx += 4;
@@ -111,12 +73,8 @@ void MessageParser::makeRadarPointCloud2Msg(uint8_t *p_buff, sensor_msgs::msg::P
         return;
     }
 
-      // https://github.com/ros2/common_interfaces/blob/rolling/std_msgs/msg/Header.msg
-      //sequence_id_ = header.ui32FN;
-   //  ss << std::hex << std::setw(8) << std::setfill('0') << header.ui32UID;
-    // frame_id_ = YamlParser::readFrameId(ss.str());
-    // frame_id_ = getFrameIdName(header.ui32UID);
-    RadarInfo radar_info = getRadarInfo(header.ui32UID);
+    // https://github.com/ros2/common_interfaces/blob/rolling/std_msgs/msg/Header.msg
+    RadarInfo radar_info = YamlParser::getRadarInfo(header.ui32UID);
     frame_id_ = radar_info.frame_id;
     if(frame_id_.empty()) {
         // return;
@@ -133,40 +91,27 @@ void MessageParser::makeRadarPointCloud2Msg(uint8_t *p_buff, sensor_msgs::msg::P
     //              frame_id_.c_str(), header.ui32FN, header.ui32TPN, header.ui32PN, header.ui16TPCKN, header.ui16PCKN);
 
     // https://github.com/ros2/common_interfaces/blob/rolling/sensor_msgs/msg/PointCloud2.msg
-    cloud_msg.header.frame_id = frame_id_;
-    cloud_msg.header.stamp.sec = stamp_tv_sec_;
-    cloud_msg.header.stamp.nanosec = stamp_tv_nsec_; //stamp_tv_nsec_; header.ui32FN;
-
-    cloud_msg.height = 1;  // Unordered point cloud, height = 1
-    cloud_msg.width = header.ui32PN;
-    cloud_msg.fields.resize(4);
-
-    cloud_msg.fields[0].name     = "x";
-    cloud_msg.fields[0].offset   = 0;
-    cloud_msg.fields[0].datatype = sensor_msgs::msg::PointField::FLOAT32;
-    cloud_msg.fields[0].count    = 1;
-
-    cloud_msg.fields[1].name = "y";
-    cloud_msg.fields[1].offset = 4;
-    cloud_msg.fields[1].datatype = sensor_msgs::msg::PointField::FLOAT32;
-    cloud_msg.fields[1].count = 1;
-
-    cloud_msg.fields[2].name = "z";
-    cloud_msg.fields[2].offset = 8;
-    cloud_msg.fields[2].datatype = sensor_msgs::msg::PointField::FLOAT32;
-    cloud_msg.fields[2].count = 1;
-
-    cloud_msg.fields[3].name = "intensity";
-    cloud_msg.fields[3].offset = 12;
-    cloud_msg.fields[3].datatype = sensor_msgs::msg::PointField::FLOAT32;
-    cloud_msg.fields[3].count = 1;
-
-    cloud_msg.is_bigendian = false;
-    cloud_msg.point_step = 16;  // Each point has 4 fields, each 4 bytes (float)
-    cloud_msg.row_step = cloud_msg.point_step * cloud_msg.width;
-    cloud_msg.is_dense = true;
-
-    cloud_msg.data.resize(cloud_msg.row_step * cloud_msg.height);
+    if (header.ui16PCKN == 1) {
+        cloud_msg.header.frame_id = frame_id_;
+        cloud_msg.header.stamp.sec = stamp_tv_sec_;
+        cloud_msg.header.stamp.nanosec = stamp_tv_nsec_;
+        cloud_msg.height = 1;
+        cloud_msg.width = header.ui32TPN;  // Width is total points over all packets
+        cloud_msg.is_bigendian = false;
+        cloud_msg.point_step = POINT_STEP_SIZE;
+        cloud_msg.row_step = cloud_msg.point_step * cloud_msg.width;
+        cloud_msg.is_dense = true;
+        cloud_msg.fields.resize(4);
+        cloud_msg.fields[0].name = "x";  cloud_msg.fields[0].offset = 0;
+        cloud_msg.fields[0].datatype = sensor_msgs::msg::PointField::FLOAT32; cloud_msg.fields[0].count = 1;
+        cloud_msg.fields[1].name = "y";  cloud_msg.fields[1].offset = 4;
+        cloud_msg.fields[1].datatype = sensor_msgs::msg::PointField::FLOAT32; cloud_msg.fields[1].count = 1;
+        cloud_msg.fields[2].name = "z";  cloud_msg.fields[2].offset = 8;
+        cloud_msg.fields[2].datatype = sensor_msgs::msg::PointField::FLOAT32; cloud_msg.fields[2].count = 1;
+        cloud_msg.fields[3].name = "intensity"; cloud_msg.fields[3].offset = 12;
+        cloud_msg.fields[3].datatype = sensor_msgs::msg::PointField::FLOAT32; cloud_msg.fields[3].count = 1;
+        cloud_msg.data.clear();
+    }
 
     // Create a rotation matrix from roll, pitch, yaw (assuming intrinsic rotations in ZYX order)
     Eigen::Matrix3f rotation_matrix;
@@ -197,7 +142,8 @@ void MessageParser::makeRadarPointCloud2Msg(uint8_t *p_buff, sensor_msgs::msg::P
         float x_local = range * std::cos(elevation * deg2rad) * std::sin(azimuth * deg2rad);
         float y_local = range * std::cos(elevation * deg2rad) * std::cos(azimuth * deg2rad);
         float z_local = range * std::sin(elevation * deg2rad);
-
+        float intensity = amplitude;
+        
         // Apply the radar's orientation and position to convert to the world frame
         Eigen::Vector3f point_local(x_local, y_local, z_local);
         Eigen::Vector3f point_world = rotation_matrix * point_local;
@@ -205,15 +151,18 @@ void MessageParser::makeRadarPointCloud2Msg(uint8_t *p_buff, sensor_msgs::msg::P
         float y = point_world.y() + radar_info.y;
         float z = point_world.z() + radar_info.z;
 
-        float intensity = amplitude;
-
         // RCLCPP_INFO(rclcpp::get_logger("point_cloud2"), "index %u x %f y %f z %f intensity %f", index, x, y, z, intensity);
 
-        uint8_t* ptr = &cloud_msg.data[i * cloud_msg.point_step];
-        memcpy(ptr + cloud_msg.fields[0].offset, &x, sizeof(float));
-        memcpy(ptr + cloud_msg.fields[1].offset, &y, sizeof(float));
-        memcpy(ptr + cloud_msg.fields[2].offset, &z, sizeof(float));
-        memcpy(ptr + cloud_msg.fields[3].offset, &intensity, sizeof(float));
+        uint8_t point_data[POINT_STEP_SIZE];
+        memcpy(point_data, &x, sizeof(float));
+        memcpy(point_data + 4, &y, sizeof(float));
+        memcpy(point_data + 8, &z, sizeof(float));
+        memcpy(point_data + 12, &intensity, sizeof(float));
+        cloud_msg.data.insert(cloud_msg.data.end(), point_data, point_data + POINT_STEP_SIZE);
+    }
+
+    if (complete) {
+        cloud_msg.width = cloud_msg.data.size() / cloud_msg.point_step;
     }
 
 }
@@ -250,12 +199,7 @@ void MessageParser::makeRadarScanMsg(uint8_t *p_buff, radar_msgs::msg::RadarScan
     }
 
      // https://github.com/ros2/common_interfaces/blob/rolling/std_msgs/msg/Header.msg
-     //sequence_id_ = header.ui32FN;
-
-    // ss << std::hex << std::setw(8) << std::setfill('0') << header.ui32UID;
-    // frame_id_ = YamlParser::readFrameId(ss.str());
-    // frame_id_ = getFrameIdName(header.ui32UID);
-    RadarInfo radar_info = getRadarInfo(header.ui32UID);
+    RadarInfo radar_info = YamlParser::getRadarInfo(header.ui32UID);
     frame_id_ = radar_info.frame_id;
     if(frame_id_.empty()) {
         ss << std::hex << std::setw(8) << std::setfill('0') << header.ui32UID;
