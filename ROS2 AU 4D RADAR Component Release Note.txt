@@ -35,3 +35,21 @@ v10.0 (from 2.4)
 - Support transform using tf_listener
 - support to assemble point cloud messages into a single message
 
+## [R1] Release Note - <에이유> (2025-04-23)
+> Description
+R1 (v10.0)
+### Breaking Changes
+* N/A
+
+### New Features
+* N/A
+
+### Bug Fixes
+* N/A
+
+### Performance Improvements
+* N/A
+
+### Other Changes
+* N/A
+
