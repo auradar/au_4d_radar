@@ -21,7 +21,7 @@ mkdir -p ~/share/ros2_ws/src
 $ cd ~/share/ros2_ws/src
 $ git clone https://github.com/auradar/au_4d_radar.git
 $ cd au_4d_radar
-$ git checkout v1x.x
+$ git checkout vx.x
 $ git submodule update --init --recursive
 ```
 

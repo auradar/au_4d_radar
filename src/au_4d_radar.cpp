@@ -89,8 +89,8 @@ void device_au_radar_node::publishRadarTrackMsg(radar_msgs::msg::RadarTracks &ra
 void device_au_radar_node::publishRadarPointCloud2(sensor_msgs::msg::PointCloud2& radar_cloud_msg) {
     std::lock_guard<std::mutex> lock(mtx_msg_publisher);
     pub_radar_point_cloud2->publish(radar_cloud_msg);
-    RCLCPP_INFO(rclcpp::get_logger("radar_node"), "pub_radar_point_cloud2 id %s 50ms %02u",
-        radar_cloud_msg.header.frame_id.c_str(), radar_cloud_msg.header.stamp.nanosec / 10000000);
+    // RCLCPP_INFO(rclcpp::get_logger("radar_node"), "pub_radar_point_cloud2 id %s 50ms %02u",
+    //     radar_cloud_msg.header.frame_id.c_str(), radar_cloud_msg.header.stamp.nanosec / 10000000);
 }
 
 void device_au_radar_node::publishHeartbeat(mon_msgs::msg::RadarHealth& radar_health_msg) {
