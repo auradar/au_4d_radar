@@ -4,12 +4,13 @@
  * @author Antonio Ko(antonioko@au-sensor.com)
  * @brief
  * @version 1.0
- * @date 2024-09-11
+ * @date 2025-04-25
  *
  * @copyright Copyright AU (c) 2024
  *
  */
 
+ #include <cmath>  // for M_PI
 #include "rclcpp/rclcpp.hpp"
 #include <yaml-cpp/yaml.h>
 #include <ament_index_cpp/get_package_share_directory.hpp>
@@ -17,6 +18,8 @@
 
 std::unordered_map<uint32_t, RadarInfo> YamlParser::radarsMap_;
 std::recursive_mutex YamlParser::radar_map_mutex_;
+// deg → rad Conversion constant
+constexpr float kDeg2Rad = static_cast<float>(M_PI / 180.0);
 
 std::string YamlParser::readHostname(const std::string& key) {
     try {
@@ -145,9 +148,15 @@ std::unordered_map<uint32_t, RadarInfo> YamlParser::readRadarsAsMap() {
 
                     YAML::Node rpy = it->second["rpy"];
                     if (rpy.size() == 3) {
-                        radar_info.roll = rpy[0].as<float>();
-                        radar_info.pitch = rpy[1].as<float>();
-                        radar_info.yaw = rpy[2].as<float>();
+                        float roll_deg  = rpy[0].as<float>();
+                        float pitch_deg = rpy[1].as<float>();
+                        float yaw_deg   = rpy[2].as<float>();
+                    
+                        radar_info.roll  = roll_deg  * kDeg2Rad;
+                        radar_info.pitch = pitch_deg * kDeg2Rad;
+                        radar_info.yaw   = yaw_deg   * kDeg2Rad;
+                        // RCLCPP_INFO(rclcpp::get_logger("prpy"), "radar_id 0x%x roll %.6f pitch %.6f yaw %.6f",
+                        //                                         radar_id, radar_info.roll, radar_info.pitch, radar_info.yaw);
                     } else {
                         RCLCPP_ERROR(rclcpp::get_logger("readRadarsAsMap"), "Invalid size for 'rpy' array for radar: %s", key.c_str());
                         continue;

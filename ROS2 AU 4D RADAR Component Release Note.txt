@@ -51,5 +51,5 @@ R1 (v10.0)
 * N/A
 
 ### Other Changes
-* N/A
+- system_info.yaml 설정 파일에서 rpy 값을 radian 대신 degree로 변경 및 YAML Parser에 반영
 
