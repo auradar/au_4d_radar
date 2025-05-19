@@ -5,7 +5,9 @@ table Heartbeat {
   mssg_type: string;
   client_hostname: string;
   status: uint32;
-  timestamp: uint64;
+  timestamp: uint64;  // UNIX time in milliseconds
+  temp_a53_cores: float32;  // e.g. CPU temp (milli-Celsius)
+  temp_tx_rfes: [float32];  // RFE TX temps (Celsius)
 }
 
 root_type Heartbeat;

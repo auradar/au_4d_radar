@@ -106,7 +106,7 @@ std::unordered_map<uint32_t, RadarInfo> YamlParser::readRadarsAsMap() {
 
     try {
         std::string yaml_file_path = ament_index_cpp::get_package_share_directory("au_4d_radar") + "/config/system_info.yaml";
-        RCLCPP_INFO(rclcpp::get_logger("readRadarsAsMap"), "Loading YAML file from: %s", yaml_file_path.c_str());
+        RCLCPP_DEBUG(rclcpp::get_logger("readRadarsAsMap"), "Loading YAML file from: %s", yaml_file_path.c_str());
         YAML::Node config = YAML::LoadFile(yaml_file_path);
 
         if (config["radars"]) {
@@ -151,12 +151,12 @@ std::unordered_map<uint32_t, RadarInfo> YamlParser::readRadarsAsMap() {
                         float roll_deg  = rpy[0].as<float>();
                         float pitch_deg = rpy[1].as<float>();
                         float yaw_deg   = rpy[2].as<float>();
-                    
+
                         radar_info.roll  = roll_deg  * kDeg2Rad;
                         radar_info.pitch = pitch_deg * kDeg2Rad;
                         radar_info.yaw   = yaw_deg   * kDeg2Rad;
-                        // RCLCPP_INFO(rclcpp::get_logger("prpy"), "radar_id 0x%x roll %.6f pitch %.6f yaw %.6f",
-                        //                                         radar_id, radar_info.roll, radar_info.pitch, radar_info.yaw);
+                        RCLCPP_DEBUG(rclcpp::get_logger("prpy"), "radar_id 0x%x roll %.6f pitch %.6f yaw %.6f",
+                                                                radar_id, radar_info.roll, radar_info.pitch, radar_info.yaw);
                     } else {
                         RCLCPP_ERROR(rclcpp::get_logger("readRadarsAsMap"), "Invalid size for 'rpy' array for radar: %s", key.c_str());
                         continue;

@@ -13,6 +13,13 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    message(STATUS "Debug mode enabled")
+    add_compile_definitions(DEBUG_BUILD)
+    add_compile_definitions(RCUTILS_ENABLE_DEBUG_LOGGING)
+    add_compile_options(-Wall -Wextra -Wpedantic)
+endif()
+
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_components REQUIRED)
@@ -80,20 +87,20 @@ if(NOT WIN32)
     "${ament_cmake_package_templates_ENVIRONMENT_HOOK_LIBRARY_PATH}")
 endif()
 
-add_library(listener_component SHARED
-  src/listener_component.cpp)
-target_compile_definitions(listener_component
+add_library(listener_node SHARED
+  src/listener_node.cpp)
+target_compile_definitions(listener_node
   PRIVATE "COMPOSITION_BUILDING_DLL")
-ament_target_dependencies(listener_component
+ament_target_dependencies(listener_node
   "rclcpp"
   "rclcpp_components"
   "radar_msgs")
-rclcpp_components_register_nodes(listener_component "au_4d_radar::Listener")
-set(node_plugins "${node_plugins}au_4d_radar::Listener;$<TARGET_FILE:listener_component>\n")
+rclcpp_components_register_nodes(listener_node "au_4d_radar::Listener")
+set(node_plugins "${node_plugins}au_4d_radar::Listener;$<TARGET_FILE:listener_node>\n")
 
 install(TARGETS
   device_au_radar_node
-  listener_component
+  listener_node
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin

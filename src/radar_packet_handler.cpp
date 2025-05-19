@@ -145,13 +145,13 @@ void RadarPacketHandler::receiveMessagesTwoQueues() {
             usleep(1000);
             continue;
         } else if (n < static_cast<int>(mTsPacketHeaderSize) || n >= BUFFER_SIZE) {
-            RCLCPP_INFO(rclcpp::get_logger("receiveMessagesTwoQueues"), "Invalid message size: %d bytes", n);
+            RCLCPP_DEBUG(rclcpp::get_logger("receiveMessagesTwoQueues"), "Invalid message size: %d bytes", n);
             continue;
         }
 
         uint32_t unique_id = Conversion::littleEndianToUint32(&buffer[MSG_TYPE_OFFSET]);
         if (!YamlParser::checkValidFrameId(unique_id)) {
-            RCLCPP_INFO(rclcpp::get_logger("receiveMessagesTwoQueues"), "Invalid FrameId: %08x", unique_id);
+            RCLCPP_DEBUG(rclcpp::get_logger("receiveMessagesTwoQueues"), "Invalid FrameId: %08x", unique_id);
             continue;
         }
 
@@ -284,7 +284,7 @@ void RadarPacketHandler::handleRadarScanMessage(std::vector<uint8_t>& buffer, ra
             assemblePointCloud(radar_cloud_buffer, radar_cloud_msg, multiple_cloud_messages);
 
             uint32_t time_sync_cloud = radar_cloud_msg.header.stamp.nanosec / 10000000;
-            // RCLCPP_INFO(rclcpp::get_logger("handleRadarScanMessage"), "id %s 50ms %02u", radar_cloud_msg.header.frame_id.c_str(), time_sync_cloud);
+            // RCLCPP_DEBUG(radar_node_->get_logger(), "id: %s 50ms %02u", radar_cloud_msg.header.frame_id.c_str(), time_sync_cloud);
 
             if (isNewTimeSync(time_sync_cloud)) {
                 radar_node_->publishRadarPointCloud2(radar_cloud_msgs);

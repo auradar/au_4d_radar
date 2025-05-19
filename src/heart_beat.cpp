@@ -2,10 +2,10 @@
  * @file heart_beat.cpp
  * @author Antonio Ko(antonioko@au-sensor.com)
  * @brief Supports automatic connection and communication functions without having to set the IP of each component in a local network environment
- * @version 1.0
- * @date 2024-08-23
+ * @version 1.1
+ * @date 2025-5-19
  *
- * @copyright Copyright AU (c) 2024
+ * @copyright Copyright AU (c) 2025
  *
  */
 
@@ -56,13 +56,11 @@ enum MessageType {
 
 namespace au_4d_radar
 {
-std::string Heartbeat::clientIp = DEFAULT_IP;
 
 Heartbeat::Heartbeat(device_au_radar_node* node)
-    : recv_sockfd(-1), send_sockfd(-1), running(true), connected(false), radar_node_(node) {}
+    : recv_sockfd(-1), send_sockfd(-1), running(true), radar_node_(node) {}
 
 Heartbeat::~Heartbeat() {
-    // std::cerr << "Heartbeat::~Heartbeat()" << std::endl;
     stop();
 }
 
@@ -87,8 +85,6 @@ void Heartbeat::stop() {
     if (receiverThread.joinable()) {
         receiverThread.join();
     }
-
-    // std::cerr << "Heartbeat::stop" << std::endl;
 }
 
 bool Heartbeat::initialize() {
@@ -131,7 +127,26 @@ bool Heartbeat::initialize() {
         return false;
     }
 
+    heartbeat_check_timer_ = radar_node_->create_wall_timer(
+        std::chrono::seconds(1),
+        std::bind(&Heartbeat::checkConnectionLoss, this));
+
     return true;
+}
+
+void Heartbeat::checkConnectionLoss() {
+    const uint64_t now = static_cast<uint64_t>(std::time(nullptr));
+
+    for (const auto& [hostname, last_ts] : last_heartbeat_ts_) {
+        // RCLCPP_DEBUG(radar_node_->get_logger(), "heart_beat:: hostname: %s now: %lu time: %lu", hostname.c_str(), now, last_ts);
+        if ((now > last_ts) && (now - last_ts >= 5)) {
+            time_t last_time = static_cast<time_t>(last_ts);
+            struct tm* timeinfo = localtime(&last_time);
+            char time_str[16];
+            strftime(time_str, sizeof(time_str), "%H:%M:%S", timeinfo);
+            RCLCPP_DEBUG(radar_node_->get_logger(),"Connection lost: %s (last heartbeat at %s)", hostname.c_str(), time_str);
+        }
+    }
 }
 
 void Heartbeat::processRequestConnection(const uint8_t* buffer, const std::string& receivedIp, socklen_t len) {
@@ -143,19 +158,19 @@ void Heartbeat::processRequestConnection(const uint8_t* buffer, const std::strin
 
     std::string receivedHostname = request->client_hostname()->str();
     if (clientHostname.starts_with(receivedHostname.substr(0, 7))) {
-        builder.Clear();
-        auto client_hostname = builder.CreateString(receivedHostname);
-        auto response = AU::CreateResponseConnection(builder, builder.CreateString("RESPONSE_CONNECTION"), client_hostname);
-        builder.Finish(response);
+        builder_.Clear();
+        auto client_hostname = builder_.CreateString(receivedHostname);
+        auto response = AU::CreateResponseConnection(builder_, builder_.CreateString("RESPONSE_CONNECTION"), client_hostname);
+        builder_.Finish(response);
 
-        size_t buff_size = builder.GetSize() + PAYLOAD_OFFSET;
+        size_t buff_size = builder_.GetSize() + PAYLOAD_OFFSET;
         std::vector<uint8_t> buff(buff_size);
         // MessageType (4 bytes) + CRC32 (4 bytes) + Payload Length (2 bytes) + Payload Body
         Conversion::uint32ToBigEndian(MessageType::RESPONSE_CONNECTION, buff.data());
-        uint32_t crc = crc32(builder.GetBufferPointer(), builder.GetSize());
+        uint32_t crc = crc32(builder_.GetBufferPointer(), builder_.GetSize());
         Conversion::uint32ToBigEndian(crc, &buff[MSG_TYPE_OFFSET]);
-        Conversion::uint16ToBigEndian(static_cast<uint16_t>(builder.GetSize()), &buff[PAYLOAD_LEN_OFFSET]);
-        memcpy(&buff[PAYLOAD_OFFSET], builder.GetBufferPointer(), builder.GetSize());
+        Conversion::uint16ToBigEndian(static_cast<uint16_t>(builder_.GetSize()), &buff[PAYLOAD_LEN_OFFSET]);
+        memcpy(&buff[PAYLOAD_OFFSET], builder_.GetBufferPointer(), builder_.GetSize());
 
         if (inet_pton(AF_INET, receivedIp.c_str(), &send_server_addr.sin_addr) <= 0) {
             RCLCPP_ERROR(rclcpp::get_logger("Heartbeat"), "Invalid IP address format: %s", receivedIp.c_str());
@@ -164,9 +179,6 @@ void Heartbeat::processRequestConnection(const uint8_t* buffer, const std::strin
 
         sendto(send_sockfd, buff.data(), buff_size, 0, (const struct sockaddr *)&send_server_addr, len);
         RCLCPP_INFO(rclcpp::get_logger("Heartbeat"), "Response for request connection sent to: %s receivedHostname: %s", receivedIp.c_str(), receivedHostname.c_str());
-        // radar_node_->radar_handler_.sendMessages("SS", receivedIp.c_str());
-        // std::this_thread::sleep_for(std::chrono::seconds(1));
-        // radar_node_->radar_handler_.sendMessages("SS", receivedIp.c_str());
     } else {
         RCLCPP_INFO(rclcpp::get_logger("Heartbeat"), "processRequestConnection() Hostname does not match receivedHostname: %s", receivedHostname.c_str());
     }
@@ -179,21 +191,31 @@ void Heartbeat::processHeartbeatMessage(const uint8_t* buffer, const std::string
         return;
     }
 
-    std::string HeartbeatHostname = Heartbeat->client_hostname()->str();
-    if (clientHostname.starts_with(HeartbeatHostname.substr(0, 7))) {
+    std::string hostname = Heartbeat->client_hostname()->str();
+    if (clientHostname.starts_with(hostname.substr(0, 7))) {
         mon_msgs::msg::RadarHealth radar_health_msg;
         time_t raw_time = static_cast<time_t>(Heartbeat->timestamp());
         struct tm* timeinfo = localtime(&raw_time);
         char time_str[64];
         strftime(time_str, sizeof(time_str), "%Y-%m-%d %H:%M:%S", timeinfo);
-        setClientIp(receivedIp);
+        setClientIp(hostname, receivedIp);
 
-        radar_health_msg.client_hostname = HeartbeatHostname;
+        radar_health_msg.client_hostname = hostname;
         radar_health_msg.status = Heartbeat->status();
         radar_health_msg.tv_sec = Heartbeat->timestamp();
+        last_heartbeat_ts_[hostname] = Heartbeat->timestamp();
 
-        // RCLCPP_INFO(rclcpp::get_logger("Heartbeat"), "client_hostname : %s status: %u tv_sec: %u",
-        //             radar_health_msg.client_hostname.c_str(), radar_health_msg.status, radar_health_msg.tv_sec);
+        // RCLCPP_DEBUG(radar_node_->get_logger(), "heart_beat:: hostname: %s status: %u time: %s",
+        //             radar_health_msg.client_hostname.c_str(), radar_health_msg.status, time_str);
+
+        auto temps = Heartbeat->temp_tx_rfes();
+        if (temps && temps->size() >= 4) {
+            RCLCPP_DEBUG(radar_node_->get_logger(), "heartbeat:: hostname: %s temp_a53_core = %.2f, txTemp_rfes = %.2f, %.2f, %.2f, %.2f",
+                hostname.c_str(), Heartbeat->temp_a53_cores(), temps->Get(0), temps->Get(1), temps->Get(2), temps->Get(3));
+        } else {
+            RCLCPP_DEBUG(radar_node_->get_logger(), "heartbeat:: hostname: %s temp_a53_core = %.2f, txTemp_rfes not available or too short",
+                hostname.c_str(), Heartbeat->temp_a53_cores());
+        }
 
         radar_node_->publishHeartbeat(radar_health_msg);
     }
@@ -245,7 +267,7 @@ void Heartbeat::handleClientMessages() {
                 processHeartbeatMessage(buffer.data(), receivedIp);
                 break;
             default:
-                RCLCPP_INFO(rclcpp::get_logger("Heartbeat"), "Unknown message type: %08x receivedIp: %s", messageType, receivedIp.c_str());
+                RCLCPP_DEBUG(radar_node_->get_logger(), "heart_beat:: Unknown message type: %08x receivedIp: %s", messageType, receivedIp.c_str());
                 break;
         }
     }
@@ -262,20 +284,29 @@ std::string Heartbeat::inAddrToString(in_addr_t addr) {
     return std::string(inet_ntoa(ipAddr));
 }
 
-void Heartbeat::setClientIp(const std::string& newIp) {
-    if (clientIp != newIp) {
-        clientIp = newIp;
-        connected = true;
-        //RCLCPP_INFO(rclcpp::get_logger("Heartbeat"), "Client IP set to: %s", clientIp.c_str());
+void Heartbeat::setClientIp(const std::string& hostname, const std::string& ip) {
+    if (clientIpMap[hostname] != ip) {
+        clientIpMap[hostname] = ip;
+        connectionMap[hostname] = true;
+        RCLCPP_DEBUG(radar_node_->get_logger(), "heart_beat:: hostname: %s Client IP set to: %s", hostname.c_str(), ip.c_str());
     }
 }
 
-std::string Heartbeat::getClientIP() {
-    return clientIp;
+std::string Heartbeat::getClientIP(const std::string& hostname) {
+    std::lock_guard<std::mutex> lock(map_mutex);
+    auto it = clientIpMap.find(hostname);
+    return (it != clientIpMap.end()) ? it->second : "";
 }
 
-bool Heartbeat::connectionStatus(){
-    return connected;
+bool Heartbeat::connectionStatus(const std::string& hostname) {
+    std::lock_guard<std::mutex> lock(map_mutex);
+    auto it = connectionMap.find(hostname);
+    return (it != connectionMap.end()) ? it->second : false;
+}
+
+Heartbeat& Heartbeat::getInstance(device_au_radar_node* node) {
+    static Heartbeat instance(node);
+    return instance;
 }
 
 }

@@ -8,9 +8,9 @@
 
 // Ensure the included flatbuffers.h is the same version as when this file was
 // generated, otherwise it may not be compatible.
-static_assert(FLATBUFFERS_VERSION_MAJOR == 24 &&
-              FLATBUFFERS_VERSION_MINOR == 3 &&
-              FLATBUFFERS_VERSION_REVISION == 25,
+static_assert(FLATBUFFERS_VERSION_MAJOR == 25 &&
+              FLATBUFFERS_VERSION_MINOR == 2 &&
+              FLATBUFFERS_VERSION_REVISION == 10,
              "Non-compatible flatbuffers version included");
 
 namespace AU {
@@ -24,7 +24,9 @@ struct Heartbeat FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
     VT_MSSG_TYPE = 4,
     VT_CLIENT_HOSTNAME = 6,
     VT_STATUS = 8,
-    VT_TIMESTAMP = 10
+    VT_TIMESTAMP = 10,
+    VT_TEMP_A53_CORES = 12,
+    VT_TEMP_TX_RFES = 14
   };
   const ::flatbuffers::String *mssg_type() const {
     return GetPointer<const ::flatbuffers::String *>(VT_MSSG_TYPE);
@@ -38,6 +40,12 @@ struct Heartbeat FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   uint64_t timestamp() const {
     return GetField<uint64_t>(VT_TIMESTAMP, 0);
   }
+  float temp_a53_cores() const {
+    return GetField<float>(VT_TEMP_A53_CORES, 0.0f);
+  }
+  const ::flatbuffers::Vector<float> *temp_tx_rfes() const {
+    return GetPointer<const ::flatbuffers::Vector<float> *>(VT_TEMP_TX_RFES);
+  }
   bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_MSSG_TYPE) &&
@@ -46,6 +54,9 @@ struct Heartbeat FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
            verifier.VerifyString(client_hostname()) &&
            VerifyField<uint32_t>(verifier, VT_STATUS, 4) &&
            VerifyField<uint64_t>(verifier, VT_TIMESTAMP, 8) &&
+           VerifyField<float>(verifier, VT_TEMP_A53_CORES, 4) &&
+           VerifyOffset(verifier, VT_TEMP_TX_RFES) &&
+           verifier.VerifyVector(temp_tx_rfes()) &&
            verifier.EndTable();
   }
 };
@@ -66,6 +77,12 @@ struct HeartbeatBuilder {
   void add_timestamp(uint64_t timestamp) {
     fbb_.AddElement<uint64_t>(Heartbeat::VT_TIMESTAMP, timestamp, 0);
   }
+  void add_temp_a53_cores(float temp_a53_cores) {
+    fbb_.AddElement<float>(Heartbeat::VT_TEMP_A53_CORES, temp_a53_cores, 0.0f);
+  }
+  void add_temp_tx_rfes(::flatbuffers::Offset<::flatbuffers::Vector<float>> temp_tx_rfes) {
+    fbb_.AddOffset(Heartbeat::VT_TEMP_TX_RFES, temp_tx_rfes);
+  }
   explicit HeartbeatBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
@@ -82,9 +99,13 @@ inline ::flatbuffers::Offset<Heartbeat> CreateHeartbeat(
     ::flatbuffers::Offset<::flatbuffers::String> mssg_type = 0,
     ::flatbuffers::Offset<::flatbuffers::String> client_hostname = 0,
     uint32_t status = 0,
-    uint64_t timestamp = 0) {
+    uint64_t timestamp = 0,
+    float temp_a53_cores = 0.0f,
+    ::flatbuffers::Offset<::flatbuffers::Vector<float>> temp_tx_rfes = 0) {
   HeartbeatBuilder builder_(_fbb);
   builder_.add_timestamp(timestamp);
+  builder_.add_temp_tx_rfes(temp_tx_rfes);
+  builder_.add_temp_a53_cores(temp_a53_cores);
   builder_.add_status(status);
   builder_.add_client_hostname(client_hostname);
   builder_.add_mssg_type(mssg_type);
@@ -96,15 +117,20 @@ inline ::flatbuffers::Offset<Heartbeat> CreateHeartbeatDirect(
     const char *mssg_type = nullptr,
     const char *client_hostname = nullptr,
     uint32_t status = 0,
-    uint64_t timestamp = 0) {
+    uint64_t timestamp = 0,
+    float temp_a53_cores = 0.0f,
+    const std::vector<float> *temp_tx_rfes = nullptr) {
   auto mssg_type__ = mssg_type ? _fbb.CreateString(mssg_type) : 0;
   auto client_hostname__ = client_hostname ? _fbb.CreateString(client_hostname) : 0;
+  auto temp_tx_rfes__ = temp_tx_rfes ? _fbb.CreateVector<float>(*temp_tx_rfes) : 0;
   return AU::CreateHeartbeat(
       _fbb,
       mssg_type__,
       client_hostname__,
       status,
-      timestamp);
+      timestamp,
+      temp_a53_cores,
+      temp_tx_rfes__);
 }
 
 inline const AU::Heartbeat *GetHeartbeat(const void *buf) {

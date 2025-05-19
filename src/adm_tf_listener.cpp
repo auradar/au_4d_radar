@@ -2,10 +2,10 @@
  * @file adm_tf_listener.cpp
  * @author Antonio Ko(antonioko@au-sensor.com)
  * @brief TF Listener Processing
- * @version 1.0
- * @date 2024-10-29
+ * @version 1.1
+ * @date 2025-5-19
  *
- * @copyright Copyright AU (c) 2024
+ * @copyright Copyright AU (c) 2025
  *
  */
 
@@ -30,7 +30,7 @@ AdmTFListener::AdmTFListener(device_au_radar_node* node): radar_node_(node) {
     tf_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
     timer_ = radar_node_->create_wall_timer(std::chrono::seconds(1), std::bind(&AdmTFListener::lookupTransform, this));
 
-    RCLCPP_INFO(radar_node_->get_logger(), "AdmTFListener created!");
+    RCLCPP_DEBUG(radar_node_->get_logger(), "AdmTFListener created!");
 }
 
 void AdmTFListener::lookupTransform() {
@@ -45,23 +45,46 @@ void AdmTFListener::lookupTransform() {
             "RADAR_REAR_LEFT"
         };
 
+        std::vector<std::string> available_frames = tf_buffer_->getAllFrameNames();
+
         for (const auto & radar : radar_links) {
+            if (std::find(available_frames.begin(), available_frames.end(), radar) == available_frames.end()) {
+                // RCLCPP_DEBUG(radar_node_->get_logger(), "Radar frame %s not available - skipping", radar.c_str());
+                continue;
+            }
+
+            if (std::find(available_frames.begin(), available_frames.end(), "base_link") == available_frames.end()) {
+                RCLCPP_WARN(radar_node_->get_logger(), "base_link frame not available");
+                break;
+            }
+
             transform = tf_buffer_->lookupTransform("base_link", radar, tf2::TimePointZero);
             auto [roll, pitch, yaw] = TransformToRPY(transform);
 
-            RadarInfo radar_info = YamlParser::getRadarInfo(radar);
-            radar_info.x = transform.transform.translation.x;
-            radar_info.y = transform.transform.translation.y;
-            radar_info.z = transform.transform.translation.z;
-            radar_info.roll = roll;
-            radar_info.pitch = pitch;
-            radar_info.yaw = yaw;
-            YamlParser::setRadarInfo(radar, radar_info);
+            RadarInfo current_info = YamlParser::getRadarInfo(radar);
+            RadarInfo new_info = current_info;
 
-  //          RCLCPP_INFO(radar_node_->get_logger(), "Frame_id %s: translation (x: %f, y: %f, z: %f)",
-  //                      radar_info.frame_id.c_str(), radar_info.x, radar_info.y, radar_info.z);
-   //         RCLCPP_INFO(radar_node_->get_logger(), "Transform rotation (roll: %lf, pitch: %lf, yaw: %lf)",
-  //                      radar_info.roll, radar_info.pitch, radar_info.yaw);
+            new_info.x = transform.transform.translation.x;
+            new_info.y = transform.transform.translation.y;
+            new_info.z = transform.transform.translation.z;
+            new_info.roll = roll;
+            new_info.pitch = pitch;
+            new_info.yaw = yaw;
+
+            if (new_info.x != current_info.x ||
+                new_info.y != current_info.y ||
+                new_info.z != current_info.z ||
+                new_info.roll != current_info.roll ||
+                new_info.pitch != current_info.pitch ||
+                new_info.yaw != current_info.yaw) {
+
+                YamlParser::setRadarInfo(radar, new_info);
+
+                RCLCPP_DEBUG(radar_node_->get_logger(), "Frame_id %s: translation (x: %f, y: %f, z: %f)",
+                            new_info.frame_id.c_str(), new_info.x, new_info.y, new_info.z);
+                RCLCPP_DEBUG(radar_node_->get_logger(), "Transform rotation (roll: %lf, pitch: %lf, yaw: %lf)",
+                            new_info.roll, new_info.pitch, new_info.yaw);
+            }
         }
     }
     catch (const tf2::TransformException & ex) {
@@ -77,7 +100,7 @@ std::tuple<double, double, double> AdmTFListener::TransformToRPY(const geometry_
 
     tf2::Quaternion quaternion(qx, qy, qz, qw);
 
-  //  RCLCPP_INFO(radar_node_->get_logger(), "child_frame_id: %s translation (qx: %f, qy: %f, qz: %f, qw: %f)",
+  //  RCLCPP_DEBUG(radar_node_->get_logger(), "child_frame_id: %s translation (qx: %f, qy: %f, qz: %f, qw: %f)",
   //              transform.child_frame_id.c_str(), qx, qy, qz, qw);
 
     // Convert quaternion to roll, pitch, yaw

@@ -16,8 +16,10 @@ def generate_launch_description():
             composable_node_descriptions=[
                 ComposableNode(
                     package='au_4d_radar',
-                    plugin='au_4d_radar::device_au_radar_node',
-                    name='device_au_radar_node')
+                    plugin='au_4d_radar::Listener',
+                    name='listener_node',
+                    extra_arguments=[{'log_level': 'DEBUG'}]
+                )
             ],
             output='screen',
     )

@@ -87,7 +87,7 @@ void MessageParser::makeRadarPointCloud2Msg(uint8_t *p_buff, sensor_msgs::msg::P
     stamp_tv_sec_ = header.ui32TS;
     stamp_tv_nsec_ = header.ui32TN;
 
-    // RCLCPP_INFO(rclcpp::get_logger("point_cloud2"), "radar_id %s FN %u TPN %u PN %u TPCKN %u PCKN %u",
+    // RCLCPP_DEBUG(rclcpp::get_logger("point_cloud2"), "radar_id %s FN %u TPN %u PN %u TPCKN %u PCKN %u",
     //              frame_id_.c_str(), header.ui32FN, header.ui32TPN, header.ui32PN, header.ui16TPCKN, header.ui16PCKN);
 
     // https://github.com/ros2/common_interfaces/blob/rolling/sensor_msgs/msg/PointCloud2.msg
@@ -135,7 +135,7 @@ void MessageParser::makeRadarPointCloud2Msg(uint8_t *p_buff, sensor_msgs::msg::P
         float amplitude = Conversion::convertToFloat(&p_buff[idx]);
         idx += 4;
 
-        // RCLCPP_INFO(rclcpp::get_logger("point_cloud2"), "index %u range %f velocity %f azimuth %f elevation %f amplitude %f",
+        // RCLCPP_DEBUG(rclcpp::get_logger("point_cloud2"), "index %u range %f velocity %f azimuth %f elevation %f amplitude %f",
         //                                                 index, range, velocity, azimuth, elevation, amplitude);
 
         // Convert to Cartesian coordinates in the radar frame
@@ -143,7 +143,7 @@ void MessageParser::makeRadarPointCloud2Msg(uint8_t *p_buff, sensor_msgs::msg::P
         float y_local = range * std::cos(elevation * deg2rad) * std::cos(azimuth * deg2rad);
         float z_local = range * std::sin(elevation * deg2rad);
         float intensity = amplitude;
-        
+
         // Apply the radar's orientation and position to convert to the world frame
         Eigen::Vector3f point_local(x_local, y_local, z_local);
         Eigen::Vector3f point_world = rotation_matrix * point_local;
@@ -151,7 +151,7 @@ void MessageParser::makeRadarPointCloud2Msg(uint8_t *p_buff, sensor_msgs::msg::P
         float y = point_world.y() + radar_info.y;
         float z = point_world.z() + radar_info.z;
 
-        // RCLCPP_INFO(rclcpp::get_logger("point_cloud2"), "index %u x %f y %f z %f intensity %f", index, x, y, z, intensity);
+        // RCLCPP_DEBUG(rclcpp::get_logger("point_cloud2"), "index %u x %f y %f z %f intensity %f", index, x, y, z, intensity);
 
         uint8_t point_data[POINT_STEP_SIZE];
         memcpy(point_data, &x, sizeof(float));
@@ -212,7 +212,7 @@ void MessageParser::makeRadarScanMsg(uint8_t *p_buff, radar_msgs::msg::RadarScan
     stamp_tv_nsec_ = header.ui32TN;
 
     // std::cout << "radar_id "<< std::hex << header.ui32UID << std::endl;
-//    RCLCPP_INFO(rclcpp::get_logger("radar_scan"), "radar_id %08x %s FN %u TPN %u PN %u TPCKN %u PCKN %u",
+//    RCLCPP_DEBUG(rclcpp::get_logger("radar_scan"), "radar_id %08x %s FN %u TPN %u PN %u TPCKN %u PCKN %u",
 //                                                header.ui32UID, frame_id_.c_str(), header.ui32FN, header.ui32TPN, header.ui32PN, header.ui16TPCKN, header.ui16PCKN);
 
     radar_scan_msg.header.frame_id = frame_id_;
@@ -235,7 +235,7 @@ void MessageParser::makeRadarScanMsg(uint8_t *p_buff, radar_msgs::msg::RadarScan
         return_msg.amplitude = Conversion::convertToFloat(&p_buff[idx]);
         idx += 4;
 
-        // RCLCPP_INFO(rclcpp::get_logger("RadarScan"), "index %u range %f velocity %f azimuth %f elevation %f amplitude %f",
+        // RCLCPP_DEBUG(rclcpp::get_logger("RadarScan"), "index %u range %f velocity %f azimuth %f elevation %f amplitude %f",
         //                                                 index, return_msg.range, return_msg.doppler_velocity, return_msg.azimuth, return_msg.elevation, return_msg.amplitude);
 
         radar_scan_msg.returns.push_back(return_msg);
@@ -259,7 +259,7 @@ void MessageParser::makeRadarTracksMsg(uint8_t *p_buff, radar_msgs::msg::RadarTr
     radar_tracks_msg.header.stamp.sec = stamp_tv_sec_;
     radar_tracks_msg.header.stamp.nanosec = stamp_tv_nsec_;
 
-    RCLCPP_INFO(rclcpp::get_logger("radar_tracks_msg"), "radar tracks msg message radar_id: %s", frame_id_.c_str());
+    RCLCPP_DEBUG(rclcpp::get_logger("radar_tracks_msg"), "radar tracks msg message radar_id: %s", frame_id_.c_str());
 
     for(int i = 0; i < 3; i++)
     {

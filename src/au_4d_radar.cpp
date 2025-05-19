@@ -42,12 +42,18 @@ device_au_radar_node::device_au_radar_node(const rclcpp::NodeOptions & options)
                     "/device/au/radar/status",
                     rclcpp::SensorDataQoS());
 
+#ifdef DEBUG_BUILD
+  if (rcutils_logging_set_logger_level(this->get_logger().get_name(), RCUTILS_LOG_SEVERITY_DEBUG) != RCUTILS_RET_OK) {
+      RCLCPP_WARN(this->get_logger(), "Failed to set logger level to DEBUG");
+  }
+#endif
+
     initInterruptHandler();
     YamlParser::init();
     heart_beat_.start();
     radar_handler_.start();
 
-    RCLCPP_INFO(rclcpp::get_logger("radar_node"), "Start AU 4D Radar Driver Node");
+    RCLCPP_DEBUG(this->get_logger(), "Start AU 4D Radar Driver Node");
 }
 
 void device_au_radar_node::interruptHandler(int sig) {
@@ -77,7 +83,7 @@ void device_au_radar_node::get_param(rclcpp::Node::SharedPtr nh, const std::stri
 void device_au_radar_node::publishRadarScanMsg(radar_msgs::msg::RadarScan &radar_scan_msg) {
     std::lock_guard<std::mutex> lock(mtx_msg_publisher);
     pub_radar_scan->publish(radar_scan_msg);
-   //  RCLCPP_INFO(rclcpp::get_logger("radar_node"), "pub_radar_scan id %s 50ms %02u",
+   //  RCLCPP_DEBUG(rclcpp::get_logger("radar_node"), "pub_radar_scan id %s 50ms %02u",
     //     radar_scan_msg.header.frame_id.c_str(), radar_scan_msg.header.stamp.nanosec / 10000000);
 }
 
@@ -89,13 +95,13 @@ void device_au_radar_node::publishRadarTrackMsg(radar_msgs::msg::RadarTracks &ra
 void device_au_radar_node::publishRadarPointCloud2(sensor_msgs::msg::PointCloud2& radar_cloud_msg) {
     std::lock_guard<std::mutex> lock(mtx_msg_publisher);
     pub_radar_point_cloud2->publish(radar_cloud_msg);
-    // RCLCPP_INFO(rclcpp::get_logger("radar_node"), "pub_radar_point_cloud2 id %s 50ms %02u",
+    // RCLCPP_DEBUG(rclcpp::get_logger("radar_node"), "pub_radar_point_cloud2 id %s 50ms %02u",
     //     radar_cloud_msg.header.frame_id.c_str(), radar_cloud_msg.header.stamp.nanosec / 10000000);
 }
 
 void device_au_radar_node::publishHeartbeat(mon_msgs::msg::RadarHealth& radar_health_msg) {
     std::lock_guard<std::mutex> lock(mtx_msg_publisher);
-    // RCLCPP_INFO(rclcpp::get_logger("radar_node"),
+    // RCLCPP_DEBUG(rclcpp::get_logger("radar_node"),
     // "pub_radar_mon hostname : %s status: %u tv_sec: %u",
     // radar_health_msg.client_hostname.c_str(), radar_health_msg.status, radar_health_msg.tv_sec);
     pub_radar_mon->publish(radar_health_msg);
