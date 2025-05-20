@@ -40,7 +40,7 @@ namespace au_4d_radar
 {
 
 RadarPacketHandler::RadarPacketHandler(device_au_radar_node* node)
-    :  rd_sockfd(-1), radar_node_(node), receive_running(true), process_running(true), process_runnings(true)  { }
+    :  rd_sockfd(-1), radar_node_(node), message_parser_(node->get_logger()), receive_running(true), process_running(true), process_runnings(true)  { }
 
 RadarPacketHandler::~RadarPacketHandler() {
     stop();
@@ -145,13 +145,13 @@ void RadarPacketHandler::receiveMessagesTwoQueues() {
             usleep(1000);
             continue;
         } else if (n < static_cast<int>(mTsPacketHeaderSize) || n >= BUFFER_SIZE) {
-            RCLCPP_DEBUG(rclcpp::get_logger("receiveMessagesTwoQueues"), "Invalid message size: %d bytes", n);
+            RCLCPP_WARN(rclcpp::get_logger("receiveMessagesTwoQueues"), "Invalid message size: %d bytes", n);
             continue;
         }
 
         uint32_t unique_id = Conversion::littleEndianToUint32(&buffer[MSG_TYPE_OFFSET]);
         if (!YamlParser::checkValidFrameId(unique_id)) {
-            RCLCPP_DEBUG(rclcpp::get_logger("receiveMessagesTwoQueues"), "Invalid FrameId: %08x", unique_id);
+            RCLCPP_WARN(rclcpp::get_logger("receiveMessagesTwoQueues"), "unique_id: %08x Not exist in system_info.yaml", unique_id);
             continue;
         }
 

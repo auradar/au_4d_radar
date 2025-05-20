@@ -80,6 +80,7 @@ void MessageParser::makeRadarPointCloud2Msg(uint8_t *p_buff, sensor_msgs::msg::P
         // return;
         ss << std::hex << std::setw(8) << std::setfill('0') << header.ui32UID;
         frame_id_ = ss.str();
+        // RCLCPP_DEBUG(logger_, "ui32UID %x Not exist in system_info.yaml", header.ui32UID);
     }
 
     complete = (header.ui16TPCKN == header.ui16PCKN);
@@ -87,8 +88,8 @@ void MessageParser::makeRadarPointCloud2Msg(uint8_t *p_buff, sensor_msgs::msg::P
     stamp_tv_sec_ = header.ui32TS;
     stamp_tv_nsec_ = header.ui32TN;
 
-    // RCLCPP_DEBUG(rclcpp::get_logger("point_cloud2"), "radar_id %s FN %u TPN %u PN %u TPCKN %u PCKN %u",
-    //              frame_id_.c_str(), header.ui32FN, header.ui32TPN, header.ui32PN, header.ui16TPCKN, header.ui16PCKN);
+    // RCLCPP_DEBUG(logger_, "radar_id %s FN %u TPN %u PN %u TPCKN %u PCKN %u",
+    //               frame_id_.c_str(), header.ui32FN, header.ui32TPN, header.ui32PN, header.ui16TPCKN, header.ui16PCKN);
 
     // https://github.com/ros2/common_interfaces/blob/rolling/sensor_msgs/msg/PointCloud2.msg
     if (header.ui16PCKN == 1) {
@@ -135,7 +136,7 @@ void MessageParser::makeRadarPointCloud2Msg(uint8_t *p_buff, sensor_msgs::msg::P
         float amplitude = Conversion::convertToFloat(&p_buff[idx]);
         idx += 4;
 
-        // RCLCPP_DEBUG(rclcpp::get_logger("point_cloud2"), "index %u range %f velocity %f azimuth %f elevation %f amplitude %f",
+        // RCLCPP_DEBUG(logger_, "index %u range %f velocity %f azimuth %f elevation %f amplitude %f",
         //                                                 index, range, velocity, azimuth, elevation, amplitude);
 
         // Convert to Cartesian coordinates in the radar frame
@@ -151,7 +152,7 @@ void MessageParser::makeRadarPointCloud2Msg(uint8_t *p_buff, sensor_msgs::msg::P
         float y = point_world.y() + radar_info.y;
         float z = point_world.z() + radar_info.z;
 
-        // RCLCPP_DEBUG(rclcpp::get_logger("point_cloud2"), "index %u x %f y %f z %f intensity %f", index, x, y, z, intensity);
+        // RCLCPP_DEBUG(logger_, "index %u x %f y %f z %f intensity %f", index, x, y, z, intensity);
 
         uint8_t point_data[POINT_STEP_SIZE];
         memcpy(point_data, &x, sizeof(float));

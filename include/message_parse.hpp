@@ -20,7 +20,8 @@ namespace au_4d_radar
 class MessageParser
 {
 public:
-    MessageParser()  = default;
+    explicit MessageParser(rclcpp::Logger logger = rclcpp::get_logger("MessageParser")): logger_(logger) {}
+    // MessageParser()  = default;
     ~MessageParser() = default;
 
     void parsePointCloud2Msg(uint8_t *p_buff, sensor_msgs::msg::PointCloud2& radar_cloud_msg, bool& complete);
@@ -39,6 +40,8 @@ private:
     std::mutex mtx_point_cloud2;
     std::mutex mtx_radar_scan;
     std::mutex mtx_radar_track;
+
+    rclcpp::Logger logger_;
 };
 
 } // namespace au_4d_radar

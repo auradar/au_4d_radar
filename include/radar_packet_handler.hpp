@@ -24,7 +24,7 @@ namespace au_4d_radar
     class RadarPacketHandler
     {
     public:
-        RadarPacketHandler(device_au_radar_node* node);
+        explicit RadarPacketHandler(device_au_radar_node* node);
         ~RadarPacketHandler();
 
         void start();
@@ -49,6 +49,7 @@ namespace au_4d_radar
 
         int rd_sockfd;
         device_au_radar_node* radar_node_;
+        MessageParser message_parser_;
         std::atomic<bool> receive_running;
         std::atomic<bool> process_running;
         std::atomic<bool> process_runnings;
@@ -64,7 +65,6 @@ namespace au_4d_radar
 
         sockaddr_in server_addr_;
         sockaddr_in client_addr_;
-        MessageParser message_parser_;
 
         std::unordered_map<uint32_t, std::thread> client_threads_;
         std::mutex client_threads_mutex_;
