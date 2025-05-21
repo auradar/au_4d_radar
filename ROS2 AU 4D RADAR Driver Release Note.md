@@ -65,7 +65,7 @@
 * N/A
 
 ### New Features
-* 각 RADAR Sensor 네트워크 연결 상태 및 센서 내부 온도 모니터링 추가
+* 각 RADAR Sensor 네트워크 연결 상태 및 센서 내부 온도/에러 모니터링 추가
 
 ### Bug Fixes
 * N/A
