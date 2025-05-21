@@ -26,7 +26,8 @@ struct Heartbeat FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
     VT_STATUS = 8,
     VT_TIMESTAMP = 10,
     VT_TEMP_A53_CORES = 12,
-    VT_TEMP_TX_RFES = 14
+    VT_TEMP_TX_RFES = 14,
+    VT_RFE_ERROR_STATE = 16
   };
   const ::flatbuffers::String *mssg_type() const {
     return GetPointer<const ::flatbuffers::String *>(VT_MSSG_TYPE);
@@ -46,6 +47,9 @@ struct Heartbeat FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   const ::flatbuffers::Vector<float> *temp_tx_rfes() const {
     return GetPointer<const ::flatbuffers::Vector<float> *>(VT_TEMP_TX_RFES);
   }
+  const ::flatbuffers::Vector<uint32_t> *rfe_error_state() const {
+    return GetPointer<const ::flatbuffers::Vector<uint32_t> *>(VT_RFE_ERROR_STATE);
+  }
   bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_MSSG_TYPE) &&
@@ -57,6 +61,8 @@ struct Heartbeat FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
            VerifyField<float>(verifier, VT_TEMP_A53_CORES, 4) &&
            VerifyOffset(verifier, VT_TEMP_TX_RFES) &&
            verifier.VerifyVector(temp_tx_rfes()) &&
+           VerifyOffset(verifier, VT_RFE_ERROR_STATE) &&
+           verifier.VerifyVector(rfe_error_state()) &&
            verifier.EndTable();
   }
 };
@@ -83,6 +89,9 @@ struct HeartbeatBuilder {
   void add_temp_tx_rfes(::flatbuffers::Offset<::flatbuffers::Vector<float>> temp_tx_rfes) {
     fbb_.AddOffset(Heartbeat::VT_TEMP_TX_RFES, temp_tx_rfes);
   }
+  void add_rfe_error_state(::flatbuffers::Offset<::flatbuffers::Vector<uint32_t>> rfe_error_state) {
+    fbb_.AddOffset(Heartbeat::VT_RFE_ERROR_STATE, rfe_error_state);
+  }
   explicit HeartbeatBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
@@ -101,9 +110,11 @@ inline ::flatbuffers::Offset<Heartbeat> CreateHeartbeat(
     uint32_t status = 0,
     uint64_t timestamp = 0,
     float temp_a53_cores = 0.0f,
-    ::flatbuffers::Offset<::flatbuffers::Vector<float>> temp_tx_rfes = 0) {
+    ::flatbuffers::Offset<::flatbuffers::Vector<float>> temp_tx_rfes = 0,
+    ::flatbuffers::Offset<::flatbuffers::Vector<uint32_t>> rfe_error_state = 0) {
   HeartbeatBuilder builder_(_fbb);
   builder_.add_timestamp(timestamp);
+  builder_.add_rfe_error_state(rfe_error_state);
   builder_.add_temp_tx_rfes(temp_tx_rfes);
   builder_.add_temp_a53_cores(temp_a53_cores);
   builder_.add_status(status);
@@ -119,10 +130,12 @@ inline ::flatbuffers::Offset<Heartbeat> CreateHeartbeatDirect(
     uint32_t status = 0,
     uint64_t timestamp = 0,
     float temp_a53_cores = 0.0f,
-    const std::vector<float> *temp_tx_rfes = nullptr) {
+    const std::vector<float> *temp_tx_rfes = nullptr,
+    const std::vector<uint32_t> *rfe_error_state = nullptr) {
   auto mssg_type__ = mssg_type ? _fbb.CreateString(mssg_type) : 0;
   auto client_hostname__ = client_hostname ? _fbb.CreateString(client_hostname) : 0;
   auto temp_tx_rfes__ = temp_tx_rfes ? _fbb.CreateVector<float>(*temp_tx_rfes) : 0;
+  auto rfe_error_state__ = rfe_error_state ? _fbb.CreateVector<uint32_t>(*rfe_error_state) : 0;
   return AU::CreateHeartbeat(
       _fbb,
       mssg_type__,
@@ -130,7 +143,8 @@ inline ::flatbuffers::Offset<Heartbeat> CreateHeartbeatDirect(
       status,
       timestamp,
       temp_a53_cores,
-      temp_tx_rfes__);
+      temp_tx_rfes__,
+      rfe_error_state__);
 }
 
 inline const AU::Heartbeat *GetHeartbeat(const void *buf) {

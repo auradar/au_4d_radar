@@ -8,6 +8,7 @@ table Heartbeat {
   timestamp: uint64;  // UNIX time in milliseconds
   temp_a53_cores: float32;  // e.g. CPU temp (milli-Celsius)
   temp_tx_rfes: [float32];  // RFE TX temps (Celsius)
+  rfe_error_state: [uint32]; // RFE full Error State
 }
 
 root_type Heartbeat;
