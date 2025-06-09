@@ -83,7 +83,7 @@ void device_au_radar_node::get_param(rclcpp::Node::SharedPtr nh, const std::stri
 void device_au_radar_node::publishRadarScanMsg(radar_msgs::msg::RadarScan &radar_scan_msg) {
     std::lock_guard<std::mutex> lock(mtx_msg_publisher);
     pub_radar_scan->publish(radar_scan_msg);
-   //  RCLCPP_DEBUG(rclcpp::get_logger("radar_node"), "pub_radar_scan id %s 50ms %02u",
+   //  RCLCPP_DEBUG(this->get_logger(), "pub_radar_scan id %s 50ms %02u",
     //     radar_scan_msg.header.frame_id.c_str(), radar_scan_msg.header.stamp.nanosec / 10000000);
 }
 
@@ -95,22 +95,21 @@ void device_au_radar_node::publishRadarTrackMsg(radar_msgs::msg::RadarTracks &ra
 void device_au_radar_node::publishRadarPointCloud2(sensor_msgs::msg::PointCloud2& radar_cloud_msg) {
     std::lock_guard<std::mutex> lock(mtx_msg_publisher);
     pub_radar_point_cloud2->publish(radar_cloud_msg);
-    // RCLCPP_DEBUG(rclcpp::get_logger("radar_node"), "pub_radar_point_cloud2 id %s 50ms %02u",
+    // RCLCPP_DEBUG(this->get_logger(), "pub_radar_point_cloud2 id %s 50ms %02u",
     //     radar_cloud_msg.header.frame_id.c_str(), radar_cloud_msg.header.stamp.nanosec / 10000000);
 }
 
 void device_au_radar_node::publishHeartbeat(mon_msgs::msg::RadarHealth& radar_health_msg) {
     std::lock_guard<std::mutex> lock(mtx_msg_publisher);
-    // RCLCPP_DEBUG(rclcpp::get_logger("radar_node"),
-    // "pub_radar_mon hostname : %s status: %u tv_sec: %u",
-    // radar_health_msg.client_hostname.c_str(), radar_health_msg.status, radar_health_msg.tv_sec);
     pub_radar_mon->publish(radar_health_msg);
+    // RCLCPP_DEBUG(this->get_logger(), "pub_radar_mon hostname : %s status: %u tv_sec: %u",
+    // radar_health_msg.client_hostname.c_str(), radar_health_msg.status, radar_health_msg.tv_sec);
 }
 
 int device_au_radar_node::initInterruptHandler(void) {
     signal(SIGINT, interruptHandler);
     signal(SIGHUP, interruptHandler);
-    signal(SIGSEGV, interruptHandler);
+    // signal(SIGSEGV, interruptHandler);
     // signal(SIGKILL, interruptHandler);
     // signal(SIGTERM, interruptHandler);
     return 0;

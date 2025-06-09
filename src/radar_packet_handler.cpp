@@ -266,6 +266,8 @@ void RadarPacketHandler::handleRadarScanMessage(std::vector<uint8_t>& buffer, ra
 
         if (completeRadarScanMsg) {
             std::lock_guard<std::mutex> lock(publish_mutex_);
+            // uint32_t time_sync_cloud = radar_scan_msg.header.stamp.nanosec / 10000000;
+            // RCLCPP_DEBUG(radar_node_->get_logger(), "id: %s 10ms %02u", radar_scan_msg.header.frame_id.c_str(), time_sync_cloud);
             radar_node_->publishRadarScanMsg(radar_scan_msg);
             radar_scan_msg.returns.clear();
         }
@@ -284,9 +286,8 @@ void RadarPacketHandler::handleRadarScanMessage(std::vector<uint8_t>& buffer, ra
             assemblePointCloud(radar_cloud_buffer, radar_cloud_msg, multiple_cloud_messages);
 
             uint32_t time_sync_cloud = radar_cloud_msg.header.stamp.nanosec / 10000000;
-            // RCLCPP_DEBUG(radar_node_->get_logger(), "id: %s 50ms %02u", radar_cloud_msg.header.frame_id.c_str(), time_sync_cloud);
-
             if (isNewTimeSync(time_sync_cloud)) {
+                // RCLCPP_DEBUG(radar_node_->get_logger(), "id: RADARS 10ms %02u", time_sync_cloud);
                 radar_node_->publishRadarPointCloud2(radar_cloud_msgs);
                 radar_cloud_msgs.data.clear();
                 radar_cloud_msgs = std::move(multiple_cloud_messages);

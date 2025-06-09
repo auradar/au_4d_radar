@@ -41,7 +41,7 @@
 * support to assemble point cloud messages into a single message
 
 
-## [R1] Release Note * <에이유> (2025*04*23)
+## [R1] Release Note * <에이유> (2025-04-23)
 > Description - R1 (from v10.0)
 ### Breaking Changes
 * N/A
@@ -59,10 +59,10 @@
 * system_info.yaml 설정 파일에서 rpy 값을 radian 대신 degree로 변경 및 YAML Parser에 반영
 
 
-## [R2] Release Note * <에이유> (2025*05*21)
+## [R2] Release Note * <에이유> (2025-05-21)
 > Description
 ### Breaking Changes
-* N/A
+* FlatBuffers Version Change : v24.3.25 -> v25.2.10
 
 ### New Features
 * 각 RADAR Sensor 네트워크 연결 상태 및 센서 내부 온도/에러 모니터링 추가
@@ -75,3 +75,20 @@
 
 ### Other Changes
 * N/A
+
+## [R3] Release Note * <에이유> (2025-06-19)
+> Description
+### Breaking Changes
+* N/A
+
+### New Features
+* listener_node point_cloud2 모니터링 추가
+
+### Bug Fixes
+* N/A
+
+### Performance Improvements
+* N/A
+
+### Other Changes
+* RCLCPP_DEBUG log 변경

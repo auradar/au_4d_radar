@@ -212,8 +212,7 @@ void MessageParser::makeRadarScanMsg(uint8_t *p_buff, radar_msgs::msg::RadarScan
     stamp_tv_sec_ = header.ui32TS;
     stamp_tv_nsec_ = header.ui32TN;
 
-    // std::cout << "radar_id "<< std::hex << header.ui32UID << std::endl;
-//    RCLCPP_DEBUG(rclcpp::get_logger("radar_scan"), "radar_id %08x %s FN %u TPN %u PN %u TPCKN %u PCKN %u",
+//    RCLCPP_DEBUG(logger_, "radar_id %08x %s FN %u TPN %u PN %u TPCKN %u PCKN %u",
 //                                                header.ui32UID, frame_id_.c_str(), header.ui32FN, header.ui32TPN, header.ui32PN, header.ui16TPCKN, header.ui16PCKN);
 
     radar_scan_msg.header.frame_id = frame_id_;
@@ -236,7 +235,7 @@ void MessageParser::makeRadarScanMsg(uint8_t *p_buff, radar_msgs::msg::RadarScan
         return_msg.amplitude = Conversion::convertToFloat(&p_buff[idx]);
         idx += 4;
 
-        // RCLCPP_DEBUG(rclcpp::get_logger("RadarScan"), "index %u range %f velocity %f azimuth %f elevation %f amplitude %f",
+        // RCLCPP_DEBUG(logger_, "index %u range %f velocity %f azimuth %f elevation %f amplitude %f",
         //                                                 index, return_msg.range, return_msg.doppler_velocity, return_msg.azimuth, return_msg.elevation, return_msg.amplitude);
 
         radar_scan_msg.returns.push_back(return_msg);
@@ -260,7 +259,7 @@ void MessageParser::makeRadarTracksMsg(uint8_t *p_buff, radar_msgs::msg::RadarTr
     radar_tracks_msg.header.stamp.sec = stamp_tv_sec_;
     radar_tracks_msg.header.stamp.nanosec = stamp_tv_nsec_;
 
-    RCLCPP_DEBUG(rclcpp::get_logger("radar_tracks_msg"), "radar tracks msg message radar_id: %s", frame_id_.c_str());
+    RCLCPP_DEBUG(logger_, "radar tracks msg message radar_id: %s", frame_id_.c_str());
 
     for(int i = 0; i < 3; i++)
     {
