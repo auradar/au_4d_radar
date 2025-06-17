@@ -266,8 +266,8 @@ void RadarPacketHandler::handleRadarScanMessage(std::vector<uint8_t>& buffer, ra
 
         if (completeRadarScanMsg) {
             std::lock_guard<std::mutex> lock(publish_mutex_);
-            // uint32_t time_sync_cloud = radar_scan_msg.header.stamp.nanosec / 10000000;
-            // RCLCPP_DEBUG(radar_node_->get_logger(), "id: %s 10ms %02u", radar_scan_msg.header.frame_id.c_str(), time_sync_cloud);
+            uint32_t time_sync_scan = radar_scan_msg.header.stamp.nanosec / 10000000;
+            RCLCPP_DEBUG(radar_node_->get_logger(), "id: %s 10ms %02u", radar_scan_msg.header.frame_id.c_str(), time_sync_scan);
             radar_node_->publishRadarScanMsg(radar_scan_msg);
             radar_scan_msg.returns.clear();
         }

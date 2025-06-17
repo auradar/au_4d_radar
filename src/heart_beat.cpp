@@ -180,7 +180,7 @@ void Heartbeat::processRequestConnection(const uint8_t* buffer, const std::strin
         sendto(send_sockfd, buff.data(), buff_size, 0, (const struct sockaddr *)&send_server_addr, len);
         RCLCPP_INFO(rclcpp::get_logger("Heartbeat"), "Response for request connection sent to: %s receivedHostname: %s", receivedIp.c_str(), receivedHostname.c_str());
     } else {
-        RCLCPP_INFO(rclcpp::get_logger("Heartbeat"), "processRequestConnection() Hostname does not match receivedHostname: %s", receivedHostname.c_str());
+        RCLCPP_WARN(rclcpp::get_logger("Heartbeat"), "Hostname does not match receivedHostname: %s", receivedHostname.c_str());
     }
 }
 
@@ -207,7 +207,7 @@ void Heartbeat::processHeartbeatMessage(const uint8_t* buffer, const std::string
 
         // RCLCPP_DEBUG(radar_node_->get_logger(), "heart_beat:: hostname: %s status: %u time: %s",
         //             radar_health_msg.client_hostname.c_str(), radar_health_msg.status, time_str);
-#ifdef DEBUG_BUILD
+#ifdef DEBUG_BUILD_
         auto temps = Heartbeat->temp_tx_rfes();
         if (temps && temps->size() >= 4) {
             RCLCPP_DEBUG(radar_node_->get_logger(), "heartbeat(%s) temperature a53_core = %.2f, tx_rfes = %.2f, %.2f, %.2f, %.2f",
@@ -295,7 +295,7 @@ void Heartbeat::setClientIp(const std::string& hostname, const std::string& ip) 
     if (clientIpMap[hostname] != ip) {
         clientIpMap[hostname] = ip;
         connectionMap[hostname] = true;
-        RCLCPP_DEBUG(radar_node_->get_logger(), "heart_beat:: hostname: %s Client IP set to: %s", hostname.c_str(), ip.c_str());
+        //RCLCPP_DEBUG(radar_node_->get_logger(), "heart_beat:: hostname: %s Client IP set to: %s", hostname.c_str(), ip.c_str());
     }
 }
 
