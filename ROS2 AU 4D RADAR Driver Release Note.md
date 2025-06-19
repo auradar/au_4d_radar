@@ -82,7 +82,7 @@
 * N/A
 
 ### New Features
-* listener_node point_cloud2 모니터링 추가
+* listener_au_radar_node point_cloud2 모니터링 추가
 
 ### Bug Fixes
 * N/A
