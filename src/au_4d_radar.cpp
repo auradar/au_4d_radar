@@ -32,15 +32,15 @@ device_au_radar_node::device_au_radar_node(const rclcpp::NodeOptions & options)
 
     pub_radar_scan = this->create_publisher<radar_msgs::msg::RadarScan>(
                     "/device/au/radar/scan",
-                    rclcpp::SensorDataQoS());
+                    qos);
 
     pub_radar_track = this->create_publisher<radar_msgs::msg::RadarTracks>(
                     "/device/au/radar/track",
-                    rclcpp::SensorDataQoS());
+                    qos);
 
     pub_radar_mon = this->create_publisher<mon_msgs::msg::RadarHealth>(
                     "/device/au/radar/status",
-                    rclcpp::SensorDataQoS());
+                    qos);
 
 #ifdef DEBUG_BUILD
   if (rcutils_logging_set_logger_level(this->get_logger().get_name(), RCUTILS_LOG_SEVERITY_DEBUG) != RCUTILS_RET_OK) {

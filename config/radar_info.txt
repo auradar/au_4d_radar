@@ -106,15 +106,15 @@ f54b9bce:
   frame_id: RADAR_FRONT_RIGHT
   xyz: [0.1, -0.1, 0]
   rpy: [0, 0, -72]
-2812b707:
+f54b9bce:
   frame_id: RADAR_REAR_RIGHT # 180 rotation based on y axis
   xyz: [-0.1, -0.1, 0]
   rpy: [0, 180, -144]
-2f7e83f9:
+05d9f6e4:
   frame_id: RADAR_REAR_LEFT
   xyz: [-0.1, 0.1, 0]
   rpy: [0, 0, 144]
-2d12af50:
+916b3915:
   frame_id: RADAR_FRONT_LEFT # 180 rotation based on y axis
   xyz: [0.1, 0.1, 0]
   rpy: [0, 180, 72]

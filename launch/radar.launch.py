@@ -17,7 +17,7 @@ def generate_launch_description():
                 package='au_4d_radar',
                 plugin='au_4d_radar::device_au_radar_node',
                 name='device_au_radar_node',
-                extra_arguments=[{'log_level': 'DEBUG'}]
+                extra_arguments=[{'log_level': 'RELEASE'}]
             )
         ],
         output='screen',

@@ -207,7 +207,7 @@ void Heartbeat::processHeartbeatMessage(const uint8_t* buffer, const std::string
 
         // RCLCPP_DEBUG(radar_node_->get_logger(), "heart_beat:: hostname: %s status: %u time: %s",
         //             radar_health_msg.client_hostname.c_str(), radar_health_msg.status, time_str);
-#ifdef DEBUG_BUILD_
+#ifdef DEBUG_BUILD
         auto temps = Heartbeat->temp_tx_rfes();
         if (temps && temps->size() >= 4) {
             RCLCPP_DEBUG(radar_node_->get_logger(), "heartbeat(%s) temperature a53_core = %.2f, tx_rfes = %.2f, %.2f, %.2f, %.2f",
