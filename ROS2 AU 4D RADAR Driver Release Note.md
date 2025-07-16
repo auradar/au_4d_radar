@@ -92,3 +92,23 @@
 
 ### Other Changes
 * RCLCPP_DEBUG log 변경
+
+## [R4] Release Note * <에이유> (2025-07-17)
+> Description
+>* Publish QOS POLICY 변경:    
+> 모든 ROS2 Publish QOS POLICY 'best_effort'에서 'reliable'로 변경
+
+### Breaking Changes
+* N/A
+
+### New Features
+* N/A
+
+### Bug Fixes
+* N/A
+
+### Performance Improvements
+* N/A
+
+### Other Changes
+* N/A
