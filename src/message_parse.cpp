@@ -46,7 +46,7 @@ void MessageParser::makeRadarPointCloud2Msg(uint8_t *p_buff, sensor_msgs::msg::P
     tsPacketHeader header = {};
     std::stringstream ss;
     const double deg2rad = M_PI / 180.0f;
-    static constexpr size_t POINT_STEP_SIZE = 16;
+    static constexpr size_t POINT_STEP_SIZE = 20;
 
     header.ui32UID = Conversion::littleEndianToUint32(&p_buff[idx]);
     idx += 4;
@@ -102,7 +102,7 @@ void MessageParser::makeRadarPointCloud2Msg(uint8_t *p_buff, sensor_msgs::msg::P
         cloud_msg.point_step = POINT_STEP_SIZE;
         cloud_msg.row_step = cloud_msg.point_step * cloud_msg.width;
         cloud_msg.is_dense = true;
-        cloud_msg.fields.resize(4);
+        cloud_msg.fields.resize(5);
         cloud_msg.fields[0].name = "x";  cloud_msg.fields[0].offset = 0;
         cloud_msg.fields[0].datatype = sensor_msgs::msg::PointField::FLOAT32; cloud_msg.fields[0].count = 1;
         cloud_msg.fields[1].name = "y";  cloud_msg.fields[1].offset = 4;
@@ -111,6 +111,8 @@ void MessageParser::makeRadarPointCloud2Msg(uint8_t *p_buff, sensor_msgs::msg::P
         cloud_msg.fields[2].datatype = sensor_msgs::msg::PointField::FLOAT32; cloud_msg.fields[2].count = 1;
         cloud_msg.fields[3].name = "intensity"; cloud_msg.fields[3].offset = 12;
         cloud_msg.fields[3].datatype = sensor_msgs::msg::PointField::FLOAT32; cloud_msg.fields[3].count = 1;
+        cloud_msg.fields[4].name = "velocity"; cloud_msg.fields[4].offset = 16;
+        cloud_msg.fields[4].datatype = sensor_msgs::msg::PointField::FLOAT32; cloud_msg.fields[4].count = 1;
         cloud_msg.data.clear();
     }
 
@@ -127,7 +129,7 @@ void MessageParser::makeRadarPointCloud2Msg(uint8_t *p_buff, sensor_msgs::msg::P
         idx += 4;
         float range = Conversion::convertToFloat(&p_buff[idx]);
         idx += 4;
-        // float velocity = Conversion::convertToFloat(&p_buff[idx]);
+        float velocity = Conversion::convertToFloat(&p_buff[idx]);
         idx += 4;
         float azimuth = Conversion::convertToFloat(&p_buff[idx]); // theta
         idx += 4;
@@ -159,6 +161,7 @@ void MessageParser::makeRadarPointCloud2Msg(uint8_t *p_buff, sensor_msgs::msg::P
         memcpy(point_data + 4, &y, sizeof(float));
         memcpy(point_data + 8, &z, sizeof(float));
         memcpy(point_data + 12, &intensity, sizeof(float));
+        memcpy(point_data + 16, &velocity, sizeof(float));
         cloud_msg.data.insert(cloud_msg.data.end(), point_data, point_data + POINT_STEP_SIZE);
     }
 
@@ -212,6 +215,7 @@ void MessageParser::makeRadarScanMsg(uint8_t *p_buff, radar_msgs::msg::RadarScan
     stamp_tv_sec_ = header.ui32TS;
     stamp_tv_nsec_ = header.ui32TN;
 
+        // std::cout << "radar_id "<< std::hex << header.ui32UID << std::endl;
 //    RCLCPP_DEBUG(logger_, "radar_id %08x %s FN %u TPN %u PN %u TPCKN %u PCKN %u",
 //                                                header.ui32UID, frame_id_.c_str(), header.ui32FN, header.ui32TPN, header.ui32PN, header.ui16TPCKN, header.ui16PCKN);
 

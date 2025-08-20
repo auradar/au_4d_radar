@@ -2,15 +2,15 @@ client_hostname: auradar-eeeeeeee
 POINT_CLOUD2: true
 MESSAGE_NUMBER: 2
 radars:
-  916b3915: # 156  24acac67
+  f54b9bce: # 156  24acac67
     frame_id: RADAR_FRONT
     xyz: [3.58, 0, 0.37]
     rpy: [0, 0, -90]
-  8d26618b: # 167
+  05d9f6e4: # 167
     frame_id: RADAR_FRONT_RIGHT
     xyz: [3.13, -1.095, 0.355]
     rpy: [0, 0, -190]
-  f54b9bce: # 168 
+  916b3915: # 168 
     frame_id: RADAR_REAR_RIGHT # 180 rotation based on y axis
     xyz: [-0.88, -0.775, 0.37]
     rpy: [0, 180, -250]
