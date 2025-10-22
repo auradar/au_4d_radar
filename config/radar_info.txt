@@ -12,46 +12,46 @@ client_hostname: auradar-eeeeeeee
 9c281337:
   frame_id: RADAR_FRONT
   xyz: [0, 0.5, 0]
-  rpy: [0, 0, -1.57] # -90 / 180 * 3.141592 = -1.57
+  rpy: [0, 0, -90] 
 05d9f6e4:
   frame_id: RADAR_FRONT_RIGHT
   xyz: [0, 0, 0]
-  rpy: [0, 0, -3.665] #  -210 / 180 * 3.141592 = -3.665
+  rpy: [0, 0, -210] 
 5ff85500:
   frame_id: RADAR_REAR_RIGHT # 180 rotation based on y axis
   xyz: [0.5, -0.3, 0]
-  rpy: [0, 3.1416, 2.3562] # 135 / 180 * 3.141592 = 2.3562
+  rpy: [0, 180, 135]
 c0a4ab10:
   frame_id: RADAR_REAR_LEFT
   xyz: [-0.5, -0.3, 0]
-  rpy: [0, 0, 0.78545] # 45 / 180 * 3.141592 = 0.78545
+  rpy: [0, 0, 45] 
 610ddb0e:
   frame_id: RADAR_FRONT_LEFT # 180 rotation based on y axis
   xyz: [-0.5, 0.3, 0]
-  rpy: [0, 3.1416, 0.5236] # 30 / 180 * 3.141592 = 0.5236
+  rpy: [0, 180, 30] 
 
 
 < 2nd assembly Car 2024-09-xx >
 f54b9bce:
   frame_id: RADAR_FRONT
   xyz: [1.665, -0.189, 0.0249]
-  rpy: [0, 0, 0]
+  rpy: [0, 0, -90]
 916b3915:
   frame_id: RADAR_FRONT_RIGHT
   xyz: [1.546, -1.002, 0.849]
-  rpy: [0, 0, -2.0944] #  -120 / 180 * 3.141592
+  rpy: [0, 0, -210]
 2a3dc654:
   frame_id: RADAR_REAR_RIGHT # 180 rotation based on y axis
   xyz: [-1.797, -0.990, 0.0849]
-  rpy: [0, 3.1416, -2.0944] # -120 / 180 * 3.141592
+  rpy: [0, 180, -210]
 90787b2c:
   frame_id: RADAR_REAR_LEFT
   xyz: [-1.797, 0.612, 0.0849]
-  rpy: [0, 0, 2.0944] # 120 / 180 * 3.141592
+  rpy: [0, 0, 30]
 3207df55:
   frame_id: RADAR_FRONT_LEFT # 180 rotation based on y axis
   xyz: [1.546, 0.624, 0.0849]
-  rpy: [0, 3.1416, 2.0944] # 120 / 180 * 3.141592
+  rpy: [0, 180, 30]
 
 < R2 2025-05-xx >
   19626d46: # 162
@@ -96,6 +96,22 @@ f54b9bce:
     frame_id: RADAR_FRONT_LEFT # 180 rotation based on y axis
     xyz: [1.546, 0.624, 0.0849]
     rpy: [0, 180, 30] # 30
+
+< A형 2호 모빌리티 >
+장착위치 / IP / Radar ID 
+Front / 192.168.10.175 / 24772310
+Front L / 192.168.10.177 / 8951db20
+Front R / 192.168.10.183 / 49ec377e
+Rear R / 192.168.10.184 / b7fe0425
+Rear L / 192.168.10.185 / 2c7d2b5a
+
+< C형 2호 모빌리티 >
+장착위치 / IP / Radar ID 
+Front / 192.168.10.186 / 17dc1789
+Front L / 192.168.10.187 / c158b5a7
+Front R / 192.168.10.188 / 1cd2047b
+Rear R / 192.168.10.190 / 64c07adb
+Rear L / 192.168.10.191 / 0ec6e4ed
 
 < Pentagon Jig >
 0dd98aa5:
