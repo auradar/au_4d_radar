@@ -166,6 +166,11 @@ void MessageParser::makeRadarPointCloud2Msg(uint8_t *p_buff, sensor_msgs::msg::P
     }
 
     if (complete) {
+        if (cloud_msg.point_step == 0) {
+            RCLCPP_WARN(rclcpp::get_logger("point_cloud2_msg"), "point_step is 0, skipping incomplete frame (mid-stream start)");
+            complete = false;
+            return;
+        }        
         cloud_msg.width = cloud_msg.data.size() / cloud_msg.point_step;
     }
 
