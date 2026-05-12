@@ -98,37 +98,28 @@
 >* Publish QOS POLICY 변경:    
 > 모든 ROS2 Publish QOS POLICY 'best_effort'에서 'reliable'로 변경
 
-### Breaking Changes
-* N/A
-
-### New Features
-* N/A
-
-### Bug Fixes
-* N/A
-
-### Performance Improvements
-* N/A
-
-### Other Changes
-* N/A
 
 ## [R5] Release Note * <에이유> (2025-08-20)
 > Description
 >* Point Cloud 2 Message 변경:
 > 카이스트 요청으로 Point Cloud 2 Message에 velocity 추가함.
 
-### Breaking Changes
-* N/A
+## [R6] Release Note * <에이유> (2026-02-10)
+> Description
+>* 멀티 패킷 스트림 일 경우 중간 스트림에서 시작 시 에러 발생 상황에 대한 예외 처리 적용
+> 
 
-### New Features
-* N/A
+## [R7] Release Note * <에이유> (2026-03-10)
+> Description
+>* 멀티 패킷 스트림 일 경우 중간 스트림에서 시작 시 에러 발생 상황에 대한 예외 처리 적용
+> 
 
-### Bug Fixes
-* N/A
+## [R8] Release Note * <에이유> (2026-04-08)
+> Description
+>* 멀티 패킷 스트림 일 경우 중간 스트림에서 시작 시 에러 발생 상황에 대한 예외 처리 적용
+> 
 
-### Performance Improvements
-* N/A
-
-### Other Changes
-* N/A
+## [R9] Release Note * <에이유> (2026-05-12)
+> Description
+>* 
+> 
