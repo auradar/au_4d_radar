@@ -1,6 +1,6 @@
 client_hostname: auradar-eeeeeeee
 POINT_CLOUD2: true
-MESSAGE_NUMBER: 3
+MESSAGE_NUMBER: 2
 radars:
   24acac67: # 156
     frame_id: RADAR_FRONT
