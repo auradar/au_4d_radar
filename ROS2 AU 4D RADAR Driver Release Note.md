@@ -154,3 +154,7 @@
 
 > Description
 
+## [R12] Release Note * <에이유> (2026-08-20)
+
+> Description
+
